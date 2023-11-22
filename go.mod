@@ -41,7 +41,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.25.2
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.33.2
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.33.4
 	github.com/khulnasoft/defsec v1.0.3
 	github.com/khulnasoft/go-mock-aws v0.0.0-20231122183358-438e2fa97a36
 	github.com/khulnasoft/tunnel-iac v0.0.1
