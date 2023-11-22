@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.27.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.25.2
