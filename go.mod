@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/aws/aws-sdk-go v1.47.12
-	github.com/aws/aws-sdk-go-v2 v1.23.1
+	github.com/aws/aws-sdk-go-v2 v1.24.0
 	github.com/aws/aws-sdk-go-v2/config v1.25.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.23.2
@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.19.2
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.62.4
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.36.0
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.39.7
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/sns v1.25.2
@@ -64,8 +64,8 @@ require (
 	github.com/aquasecurity/defsec v0.93.2-0.20231117234854-a13ada52a90f // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.4 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.4 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.9 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.9 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.1 // indirect
@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.17.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.19.2 // indirect
-	github.com/aws/smithy-go v1.17.0 // indirect
+	github.com/aws/smithy-go v1.19.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
