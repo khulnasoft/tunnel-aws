@@ -8,20 +8,21 @@ require (
 	github.com/aquasecurity/go-mock-aws v0.0.0-20240523055201-a4152219967f
 	github.com/aquasecurity/loading v0.0.5
 	github.com/aquasecurity/table v1.8.0
+	github.com/aquasecurity/tml v0.6.1
 	github.com/aws/aws-sdk-go-v2 v1.32.6
 	github.com/aws/aws-sdk-go-v2/config v1.28.6
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.47
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.24.7
-	github.com/aws/aws-sdk-go-v2/service/athena v1.48.5
+	github.com/aws/aws-sdk-go-v2/service/athena v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.46.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.39.6
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.2
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.195.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.1
@@ -39,13 +40,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mq v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/rds v1.92.0
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.52.2
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.70.0
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.53.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.50.2
+	github.com/khulnasoft/tunnel v0.0.3
 	github.com/liamg/iamgo v0.0.9
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
@@ -129,7 +131,6 @@ require (
 	github.com/containerd/stargz-snapshotter/estargz v0.15.1 // indirect
 	github.com/containerd/typeurl/v2 v2.2.2 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
-	github.com/csaf-poc/csaf_distribution/v3 v3.0.0 // indirect
 	github.com/cyberphone/json-canonicalization v0.0.0-20231011164504-785e29786b46 // indirect
 	github.com/cyphar/filepath-securejoin v0.3.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
@@ -176,6 +177,7 @@ require (
 	github.com/go-openapi/validate v0.24.0 // indirect
 	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
+	github.com/gocsaf/csaf/v3 v3.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.1 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
@@ -221,7 +223,8 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
-	github.com/khulnasoft/tunnel v0.0.3 // indirect
+	github.com/khulnasoft-lab/tunnel-java-db v0.0.0-20240907154440-0d77c2623acb // indirect
+	github.com/khulnasoft/tunnel-checks v0.0.1 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/knqyf263/go-deb-version v0.0.0-20241115132648-6f4aee6ccd23 // indirect
 	github.com/knqyf263/go-rpm-version v0.0.0-20220614171824-631e686d1075 // indirect
@@ -283,6 +286,7 @@ require (
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/prometheus/client_golang v1.20.5 // indirect
