@@ -3,12 +3,12 @@ package cloudtrail
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	"github.com/aws/aws-sdk-go-v2/service/cloudtrail/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/cloudtrail"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/cloudtrail"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -88,9 +88,9 @@ func (a *adapter) adaptTrail(info types.TrailInfo) (*cloudtrail.Trail, error) {
 		return nil, err
 	}
 
-	cloudWatchLogsArn := defsecTypes.StringDefault("", metadata)
+	cloudWatchLogsArn := tunnelTypes.StringDefault("", metadata)
 	if response.Trail.CloudWatchLogsLogGroupArn != nil {
-		cloudWatchLogsArn = defsecTypes.String(*response.Trail.CloudWatchLogsLogGroupArn, metadata)
+		cloudWatchLogsArn = tunnelTypes.String(*response.Trail.CloudWatchLogsLogGroupArn, metadata)
 	}
 
 	var bucketName string
@@ -98,14 +98,14 @@ func (a *adapter) adaptTrail(info types.TrailInfo) (*cloudtrail.Trail, error) {
 		bucketName = *response.Trail.S3BucketName
 	}
 
-	name := defsecTypes.StringDefault("", metadata)
+	name := tunnelTypes.StringDefault("", metadata)
 	if info.Name != nil {
-		name = defsecTypes.String(*info.Name, metadata)
+		name = tunnelTypes.String(*info.Name, metadata)
 	}
 
-	isLogging := defsecTypes.BoolDefault(false, metadata)
+	isLogging := tunnelTypes.BoolDefault(false, metadata)
 	if status.IsLogging != nil {
-		isLogging = defsecTypes.Bool(*status.IsLogging, metadata)
+		isLogging = tunnelTypes.Bool(*status.IsLogging, metadata)
 	}
 
 	var eventSelectors []cloudtrail.EventSelector
@@ -119,13 +119,13 @@ func (a *adapter) adaptTrail(info types.TrailInfo) (*cloudtrail.Trail, error) {
 		for _, eventSelector := range output.EventSelectors {
 			var resources []cloudtrail.DataResource
 			for _, dataResource := range eventSelector.DataResources {
-				typ := defsecTypes.StringDefault("", metadata)
+				typ := tunnelTypes.StringDefault("", metadata)
 				if dataResource.Type != nil {
-					typ = defsecTypes.String(*dataResource.Type, metadata)
+					typ = tunnelTypes.String(*dataResource.Type, metadata)
 				}
-				var values defsecTypes.StringValueList
+				var values tunnelTypes.StringValueList
 				for _, value := range dataResource.Values {
-					values = append(values, defsecTypes.String(value, metadata))
+					values = append(values, tunnelTypes.String(value, metadata))
 				}
 				resources = append(resources, cloudtrail.DataResource{
 					Metadata: metadata,
@@ -136,7 +136,7 @@ func (a *adapter) adaptTrail(info types.TrailInfo) (*cloudtrail.Trail, error) {
 			eventSelectors = append(eventSelectors, cloudtrail.EventSelector{
 				Metadata:      metadata,
 				DataResources: resources,
-				ReadWriteType: defsecTypes.String(string(eventSelector.ReadWriteType), metadata),
+				ReadWriteType: tunnelTypes.String(string(eventSelector.ReadWriteType), metadata),
 			})
 		}
 	}
@@ -144,12 +144,12 @@ func (a *adapter) adaptTrail(info types.TrailInfo) (*cloudtrail.Trail, error) {
 	return &cloudtrail.Trail{
 		Metadata:                  metadata,
 		Name:                      name,
-		EnableLogFileValidation:   defsecTypes.Bool(response.Trail.LogFileValidationEnabled != nil && *response.Trail.LogFileValidationEnabled, metadata),
-		IsMultiRegion:             defsecTypes.Bool(response.Trail.IsMultiRegionTrail != nil && *response.Trail.IsMultiRegionTrail, metadata),
+		EnableLogFileValidation:   tunnelTypes.Bool(response.Trail.LogFileValidationEnabled != nil && *response.Trail.LogFileValidationEnabled, metadata),
+		IsMultiRegion:             tunnelTypes.Bool(response.Trail.IsMultiRegionTrail != nil && *response.Trail.IsMultiRegionTrail, metadata),
 		CloudWatchLogsLogGroupArn: cloudWatchLogsArn,
-		KMSKeyID:                  defsecTypes.String(kmsKeyId, metadata),
+		KMSKeyID:                  tunnelTypes.String(kmsKeyId, metadata),
 		IsLogging:                 isLogging,
-		BucketName:                defsecTypes.String(bucketName, metadata),
+		BucketName:                tunnelTypes.String(bucketName, metadata),
 		EventSelectors:            eventSelectors,
 	}, nil
 }

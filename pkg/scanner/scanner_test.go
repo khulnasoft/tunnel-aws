@@ -4,21 +4,22 @@ import (
 	"context"
 	"io/fs"
 	"testing"
+	"testing/fstest"
 
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/providers/azure"
-	"github.com/khulnasoft/defsec/pkg/providers/azure/authorization"
-
-	"github.com/khulnasoft/tunnel-iac/pkg/types"
-	"github.com/khulnasoft/defsec/pkg/framework"
-	"github.com/khulnasoft/defsec/pkg/providers/aws"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/rds"
-	"github.com/khulnasoft/defsec/pkg/scanners/options"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/defsec/test/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/khulnasoft/tunnel/pkg/iac/framework"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/rds"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/azure"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/azure/authorization"
+	"github.com/khulnasoft/tunnel/pkg/iac/rego"
+	"github.com/khulnasoft/tunnel/pkg/iac/scan"
+	"github.com/khulnasoft/tunnel/pkg/iac/scanners/options"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	iacTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type testStruct struct {
@@ -61,17 +62,17 @@ func TestScanner_GetRegisteredRules(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for _, r := range tc.scanner.getRules() {
-				assertRules(t, r, tc)
+				assertRules(t, r.Rule, tc)
 			}
 		})
 	}
 }
 
-func assertRules(t *testing.T, r types.RegisteredRule, tc testStruct) {
+func assertRules(t *testing.T, r scan.Rule, tc testStruct) {
 	t.Helper()
 
-	if _, ok := r.Rule.Frameworks[tc.fwApplied]; !ok {
-		assert.FailNowf(t, "unexpected rule found", "rule: %s in test case: %s", r.Rule.AVDID, tc.name)
+	if _, ok := r.Frameworks[tc.fwApplied]; !ok {
+		assert.FailNowf(t, "unexpected rule found", "rule: %s in test case: %s", r.AVDID, tc.name)
 	}
 }
 
@@ -88,7 +89,7 @@ func Test_AWSInputSelectors(t *testing.T) {
 	}{
 		{
 			name: "selector is not defined",
-			srcFS: testutil.CreateFS(t, map[string]string{
+			srcFS: createFS(map[string]string{
 				"policies/rds_policy.rego": `# METADATA
 # title: "RDS Publicly Accessible"
 # custom:
@@ -113,8 +114,8 @@ deny[res] {
 			state: state.State{AWS: aws.AWS{
 				RDS: rds.RDS{
 					Instances: []rds.Instance{
-						{Metadata: defsecTypes.Metadata{},
-							PublicAccess: defsecTypes.Bool(true, defsecTypes.NewTestMetadata()),
+						{Metadata: iacTypes.Metadata{},
+							PublicAccess: iacTypes.Bool(true, iacTypes.NewTestMetadata()),
 						},
 					},
 				},
@@ -127,7 +128,7 @@ deny[res] {
 		},
 		{
 			name: "selector is empty",
-			srcFS: testutil.CreateFS(t, map[string]string{
+			srcFS: createFS(map[string]string{
 				"policies/rds_policy.rego": `# METADATA
 # title: "RDS Publicly Accessible"
 # custom:
@@ -155,8 +156,8 @@ deny[res] {
 			state: state.State{AWS: aws.AWS{
 				RDS: rds.RDS{
 					Instances: []rds.Instance{
-						{Metadata: defsecTypes.Metadata{},
-							PublicAccess: defsecTypes.Bool(true, defsecTypes.NewTestMetadata()),
+						{Metadata: iacTypes.Metadata{},
+							PublicAccess: iacTypes.Bool(true, iacTypes.NewTestMetadata()),
 						},
 					},
 				},
@@ -168,7 +169,7 @@ deny[res] {
 		},
 		{
 			name: "selector without subtype",
-			srcFS: testutil.CreateFS(t, map[string]string{
+			srcFS: createFS(map[string]string{
 				"policies/rds_policy.rego": `# METADATA
 # title: "RDS Publicly Accessible"
 # custom:
@@ -197,8 +198,8 @@ deny[res] {
 			state: state.State{AWS: aws.AWS{
 				RDS: rds.RDS{
 					Instances: []rds.Instance{
-						{Metadata: defsecTypes.Metadata{},
-							PublicAccess: defsecTypes.Bool(true, defsecTypes.NewTestMetadata()),
+						{Metadata: iacTypes.Metadata{},
+							PublicAccess: iacTypes.Bool(true, iacTypes.NewTestMetadata()),
 						},
 					},
 				},
@@ -211,7 +212,7 @@ deny[res] {
 		},
 		{
 			name: "conflicting selectors",
-			srcFS: testutil.CreateFS(t, map[string]string{
+			srcFS: createFS(map[string]string{
 				"policies/rds_policy.rego": `# METADATA
 # title: "RDS Publicly Accessible"
 # custom:
@@ -234,8 +235,8 @@ deny[res] {
 			state: state.State{AWS: aws.AWS{
 				RDS: rds.RDS{
 					Instances: []rds.Instance{
-						{Metadata: defsecTypes.Metadata{},
-							PublicAccess: defsecTypes.Bool(true, defsecTypes.NewTestMetadata()),
+						{Metadata: iacTypes.Metadata{},
+							PublicAccess: iacTypes.Bool(true, iacTypes.NewTestMetadata()),
 						},
 					},
 				},
@@ -247,7 +248,7 @@ deny[res] {
 		},
 		{
 			name: "selector is defined with empty subtype",
-			srcFS: testutil.CreateFS(t, map[string]string{
+			srcFS: createFS(map[string]string{
 				"policies/rds_policy.rego": `# METADATA
 # title: "RDS Publicly Accessible"
 # custom:
@@ -279,8 +280,8 @@ deny[res] {
 			state: state.State{AWS: aws.AWS{
 				RDS: rds.RDS{
 					Instances: []rds.Instance{
-						{Metadata: defsecTypes.Metadata{},
-							PublicAccess: defsecTypes.Bool(true, defsecTypes.NewTestMetadata()),
+						{Metadata: iacTypes.Metadata{},
+							PublicAccess: iacTypes.Bool(true, iacTypes.NewTestMetadata()),
 						},
 					},
 				},
@@ -293,7 +294,7 @@ deny[res] {
 		},
 		{
 			name: "single cloud, single selector",
-			srcFS: testutil.CreateFS(t, map[string]string{
+			srcFS: createFS(map[string]string{
 				"policies/rds_policy.rego": `# METADATA
 # title: "RDS Publicly Accessible"
 # description: "Ensures RDS instances are not launched into the public cloud."
@@ -359,8 +360,8 @@ deny[res] {
 			state: state.State{AWS: aws.AWS{
 				RDS: rds.RDS{
 					Instances: []rds.Instance{
-						{Metadata: defsecTypes.Metadata{},
-							PublicAccess: defsecTypes.Bool(true, defsecTypes.NewTestMetadata()),
+						{Metadata: iacTypes.Metadata{},
+							PublicAccess: iacTypes.Bool(true, iacTypes.NewTestMetadata()),
 						},
 					},
 				},
@@ -373,7 +374,7 @@ deny[res] {
 		},
 		{
 			name: "multi cloud, single selector, same named service",
-			srcFS: testutil.CreateFS(t, map[string]string{
+			srcFS: createFS(map[string]string{
 				"policies/azure_iam_policy.rego": `# METADATA
 # title: "Azure IAM Policy"
 # custom:
@@ -409,23 +410,23 @@ deny[res] {
 				AWS: aws.AWS{
 					IAM: iam.IAM{
 						PasswordPolicy: iam.PasswordPolicy{
-							MinimumLength: defsecTypes.Int(1, defsecTypes.NewTestMetadata()),
+							MinimumLength: iacTypes.Int(1, iacTypes.NewTestMetadata()),
 						}},
 				},
 				Azure: azure.Azure{
 					Authorization: authorization.Authorization{
 						RoleDefinitions: []authorization.RoleDefinition{{
-							Metadata: defsecTypes.NewTestMetadata(),
+							Metadata: iacTypes.NewTestMetadata(),
 							Permissions: []authorization.Permission{
 								{
-									Metadata: defsecTypes.NewTestMetadata(),
-									Actions: []defsecTypes.StringValue{
-										defsecTypes.String("*", defsecTypes.NewTestMetadata()),
+									Metadata: iacTypes.NewTestMetadata(),
+									Actions: []iacTypes.StringValue{
+										iacTypes.String("*", iacTypes.NewTestMetadata()),
 									},
 								},
 							},
-							AssignableScopes: []defsecTypes.StringValue{
-								defsecTypes.StringUnresolvable(defsecTypes.NewTestMetadata()),
+							AssignableScopes: []iacTypes.StringValue{
+								iacTypes.StringUnresolvable(iacTypes.NewTestMetadata()),
 							}},
 						}},
 				},
@@ -438,7 +439,7 @@ deny[res] {
 		},
 		{
 			name: "single cloud, single selector with config data",
-			srcFS: testutil.CreateFS(t, map[string]string{
+			srcFS: createFS(map[string]string{
 				"policies/rds_policy.rego": `# METADATA
 # title: "RDS Publicly Accessible"
 # description: "Ensures RDS instances are not launched into the public cloud."
@@ -499,7 +500,7 @@ deny[res] {
 }
 `,
 			}),
-			dataFS: testutil.CreateFS(t, map[string]string{
+			dataFS: createFS(map[string]string{
 				"config-data/data.json": `{
     "settings": {
 		"DS0999": {
@@ -515,8 +516,8 @@ deny[res] {
 			state: state.State{AWS: aws.AWS{
 				RDS: rds.RDS{
 					Instances: []rds.Instance{
-						{Metadata: defsecTypes.Metadata{},
-							PublicAccess: defsecTypes.Bool(false, defsecTypes.NewTestMetadata()),
+						{Metadata: iacTypes.Metadata{},
+							PublicAccess: iacTypes.Bool(false, iacTypes.NewTestMetadata()),
 						},
 					},
 				},
@@ -533,12 +534,12 @@ deny[res] {
 		t.Run(tc.name, func(t *testing.T) {
 			var scannerOpts []options.ScannerOption
 			if tc.dataFS != nil {
-				scannerOpts = append(scannerOpts, options.ScannerWithPolicyDirs("config-data"))
+				scannerOpts = append(scannerOpts, rego.WithPolicyDirs("config-data"))
 			}
-			scannerOpts = append(scannerOpts, options.ScannerWithEmbeddedPolicies(false))
-			scannerOpts = append(scannerOpts, options.ScannerWithPolicyFilesystem(tc.srcFS))
+			scannerOpts = append(scannerOpts, rego.WithEmbeddedPolicies(false))
+			scannerOpts = append(scannerOpts, rego.WithPolicyFilesystem(tc.srcFS))
 			scannerOpts = append(scannerOpts, options.ScannerWithRegoOnly(true))
-			scannerOpts = append(scannerOpts, options.ScannerWithPolicyDirs("policies/"))
+			scannerOpts = append(scannerOpts, rego.WithPolicyDirs("policies"))
 			scanner := New(scannerOpts...)
 
 			results, err := scanner.Scan(context.TODO(), &tc.state)
@@ -549,4 +550,12 @@ deny[res] {
 			}
 		})
 	}
+}
+
+func createFS(files map[string]string) fs.FS {
+	fsys := make(fstest.MapFS)
+	for path, content := range files {
+		fsys[path] = &fstest.MapFile{Data: []byte(content)}
+	}
+	return fsys
 }

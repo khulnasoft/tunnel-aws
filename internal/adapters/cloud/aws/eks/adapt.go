@@ -3,12 +3,12 @@ package eks
 import (
 	eksapi "github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/eks"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/eks"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -78,11 +78,11 @@ func (a *adapter) adaptCluster(name string) (*eks.Cluster, error) {
 	metadata := a.CreateMetadataFromARN(*output.Cluster.Arn)
 
 	var publicAccess bool
-	var publicCidrs []defsecTypes.StringValue
+	var publicCidrs []tunnelTypes.StringValue
 	if output.Cluster.ResourcesVpcConfig != nil {
 		publicAccess = output.Cluster.ResourcesVpcConfig.EndpointPublicAccess
 		for _, cidr := range output.Cluster.ResourcesVpcConfig.PublicAccessCidrs {
-			publicCidrs = append(publicCidrs, defsecTypes.String(cidr, metadata))
+			publicCidrs = append(publicCidrs, tunnelTypes.String(cidr, metadata))
 		}
 	}
 
@@ -128,18 +128,18 @@ func (a *adapter) adaptCluster(name string) (*eks.Cluster, error) {
 		Metadata: metadata,
 		Logging: eks.Logging{
 			Metadata:          metadata,
-			API:               defsecTypes.Bool(logAPI, metadata),
-			Audit:             defsecTypes.Bool(logAudit, metadata),
-			Authenticator:     defsecTypes.Bool(logAuth, metadata),
-			ControllerManager: defsecTypes.Bool(logCM, metadata),
-			Scheduler:         defsecTypes.Bool(logSched, metadata),
+			API:               tunnelTypes.Bool(logAPI, metadata),
+			Audit:             tunnelTypes.Bool(logAudit, metadata),
+			Authenticator:     tunnelTypes.Bool(logAuth, metadata),
+			ControllerManager: tunnelTypes.Bool(logCM, metadata),
+			Scheduler:         tunnelTypes.Bool(logSched, metadata),
 		},
 		Encryption: eks.Encryption{
 			Metadata: metadata,
-			Secrets:  defsecTypes.Bool(secretsEncrypted, metadata),
-			KMSKeyID: defsecTypes.String(encryptionKeyARN, metadata),
+			Secrets:  tunnelTypes.Bool(secretsEncrypted, metadata),
+			KMSKeyID: tunnelTypes.String(encryptionKeyARN, metadata),
 		},
-		PublicAccessEnabled: defsecTypes.Bool(publicAccess, metadata),
+		PublicAccessEnabled: tunnelTypes.Bool(publicAccess, metadata),
 		PublicAccessCIDRs:   publicCidrs,
 	}, nil
 }

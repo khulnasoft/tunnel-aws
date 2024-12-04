@@ -7,11 +7,12 @@ import (
 
 	iamapi "github.com/aws/aws-sdk-go-v2/service/iam"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
+	"github.com/khulnasoft/tunnel/pkg/log"
 )
 
 func (a *adapter) adaptUsers(state *state.State) error {
@@ -68,39 +69,11 @@ func (a *adapter) getMFADevices(user iamtypes.User) ([]iam.MFADevice, error) {
 		}
 		devices = append(devices, iam.MFADevice{
 			Metadata:  metadata,
-			IsVirtual: defsecTypes.Bool(isVirtual, metadata),
+			IsVirtual: tunnelTypes.Bool(isVirtual, metadata),
 		})
 	}
 
 	return devices, nil
-}
-
-func (a *adapter) getUserGroups(apiUser iamtypes.User) []iam.Group {
-	var groups []iam.Group
-
-	input := &iamapi.ListGroupsForUserInput{
-		UserName: apiUser.UserName,
-	}
-	for {
-		output, err := a.api.ListGroupsForUser(a.Context(), input)
-		if err != nil {
-			a.Debug("Failed to locate groups attached to user '%s': %s", *apiUser.UserName, err)
-			break
-		}
-		for _, apiGroup := range output.Groups {
-			group, err := a.adaptGroup(apiGroup, nil)
-			if err != nil {
-				a.Debug("Failed to adapt group attached to user '%s': %s", *apiUser.UserName, err)
-				continue
-			}
-			groups = append(groups, *group)
-		}
-		if !output.IsTruncated {
-			break
-		}
-		input.Marker = output.Marker
-	}
-	return groups
 }
 
 func (a *adapter) getUserPolicies(apiUser iamtypes.User) []iam.Policy {
@@ -111,14 +84,16 @@ func (a *adapter) getUserPolicies(apiUser iamtypes.User) []iam.Policy {
 	for {
 		policiesOutput, err := a.api.ListAttachedUserPolicies(a.Context(), input)
 		if err != nil {
-			a.Debug("Failed to locate policies attached to user '%s': %s", *apiUser.UserName, err)
+			a.Logger().Error("Failed to locate policies attached to user",
+				log.String("name", *apiUser.UserName), log.Err(err))
 			break
 		}
 
 		for _, apiPolicy := range policiesOutput.AttachedPolicies {
 			policy, err := a.adaptAttachedPolicy(apiPolicy)
 			if err != nil {
-				a.Debug("Failed to adapt policy attached to user '%s': %s", *apiUser.UserName, err)
+				a.Logger().Error("Failed to adapt policy attached to user",
+					log.String("name", *apiUser.UserName), log.Err(err))
 				continue
 			}
 			policies = append(policies, *policy)
@@ -146,29 +121,29 @@ func (a *adapter) getUserKeys(apiUser iamtypes.User) ([]iam.AccessKey, error) {
 		}
 		for _, apiAccessKey := range output.AccessKeyMetadata {
 
-			lastUsed := defsecTypes.TimeUnresolvable(metadata)
+			lastUsed := tunnelTypes.TimeUnresolvable(metadata)
 			if output, err := a.api.GetAccessKeyLastUsed(a.Context(), &iamapi.GetAccessKeyLastUsedInput{
 				AccessKeyId: apiAccessKey.AccessKeyId,
 			}); err == nil {
 				if output.AccessKeyLastUsed != nil && output.AccessKeyLastUsed.LastUsedDate != nil {
-					lastUsed = defsecTypes.Time(*output.AccessKeyLastUsed.LastUsedDate, metadata)
+					lastUsed = tunnelTypes.Time(*output.AccessKeyLastUsed.LastUsedDate, metadata)
 				}
 			}
 
-			accessKeyId := defsecTypes.StringDefault("", metadata)
+			accessKeyId := tunnelTypes.StringDefault("", metadata)
 			if apiAccessKey.AccessKeyId != nil {
-				accessKeyId = defsecTypes.String(*apiAccessKey.AccessKeyId, metadata)
+				accessKeyId = tunnelTypes.String(*apiAccessKey.AccessKeyId, metadata)
 			}
 
-			creationDate := defsecTypes.TimeDefault(time.Now(), metadata)
+			creationDate := tunnelTypes.TimeDefault(time.Now(), metadata)
 			if apiAccessKey.CreateDate != nil {
-				creationDate = defsecTypes.Time(*apiAccessKey.CreateDate, metadata)
+				creationDate = tunnelTypes.Time(*apiAccessKey.CreateDate, metadata)
 			}
 
 			keys = append(keys, iam.AccessKey{
 				Metadata:     metadata,
 				AccessKeyId:  accessKeyId,
-				Active:       defsecTypes.Bool(apiAccessKey.Status == iamtypes.StatusTypeActive, metadata),
+				Active:       tunnelTypes.Bool(apiAccessKey.Status == iamtypes.StatusTypeActive, metadata),
 				CreationDate: creationDate,
 				LastAccess:   lastUsed,
 			})
@@ -192,10 +167,7 @@ func (a *adapter) adaptUser(apiUser iamtypes.User) (*iam.User, error) {
 
 	metadata := a.CreateMetadataFromARN(*apiUser.Arn)
 
-	groups := a.getUserGroups(apiUser)
-
 	policies := a.getUserPolicies(apiUser)
-
 	keys, err := a.getUserKeys(apiUser)
 	if err != nil {
 		return nil, err
@@ -206,20 +178,19 @@ func (a *adapter) adaptUser(apiUser iamtypes.User) (*iam.User, error) {
 		return nil, err
 	}
 
-	lastAccess := defsecTypes.TimeUnresolvable(metadata)
+	lastAccess := tunnelTypes.TimeUnresolvable(metadata)
 	if apiUser.PasswordLastUsed != nil {
-		lastAccess = defsecTypes.Time(*apiUser.PasswordLastUsed, metadata)
+		lastAccess = tunnelTypes.Time(*apiUser.PasswordLastUsed, metadata)
 	}
 
-	username := defsecTypes.StringDefault("", metadata)
+	username := tunnelTypes.StringDefault("", metadata)
 	if apiUser.UserName != nil {
-		username = defsecTypes.String(*apiUser.UserName, metadata)
+		username = tunnelTypes.String(*apiUser.UserName, metadata)
 	}
 
 	return &iam.User{
 		Metadata:   metadata,
 		Name:       username,
-		Groups:     groups,
 		Policies:   policies,
 		AccessKeys: keys,
 		MFADevices: mfaDevices,

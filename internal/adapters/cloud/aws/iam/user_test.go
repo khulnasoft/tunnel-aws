@@ -4,12 +4,13 @@ import (
 	"testing"
 
 	iamapi "github.com/aws/aws-sdk-go-v2/service/iam"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws/test"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/state"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws/test"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
 )
 
 type userDetails struct {

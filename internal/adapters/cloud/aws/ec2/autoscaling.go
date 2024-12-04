@@ -5,10 +5,10 @@ import (
 
 	ec2api "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/ec2"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/ec2"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) getLaunchTemplates() ([]ec2.LaunchTemplate, error) {
@@ -62,18 +62,18 @@ func (a *adapter) adaptLaunchTemplate(template types.LaunchTemplate) (*ec2.Launc
 
 	instance := ec2.NewInstance(metadata)
 	if templateData.MetadataOptions != nil {
-		instance.MetadataOptions.HttpTokens = defsecTypes.StringDefault(string(templateData.MetadataOptions.HttpTokens), metadata)
-		instance.MetadataOptions.HttpEndpoint = defsecTypes.StringDefault(string(templateData.MetadataOptions.HttpEndpoint), metadata)
+		instance.MetadataOptions.HttpTokens = tunnelTypes.StringDefault(string(templateData.MetadataOptions.HttpTokens), metadata)
+		instance.MetadataOptions.HttpEndpoint = tunnelTypes.StringDefault(string(templateData.MetadataOptions.HttpEndpoint), metadata)
 	}
 
 	if templateData.BlockDeviceMappings != nil {
 		for _, blockMapping := range templateData.BlockDeviceMappings {
 			ebsDevice := &ec2.BlockDevice{
 				Metadata:  metadata,
-				Encrypted: defsecTypes.BoolDefault(false, metadata),
+				Encrypted: tunnelTypes.BoolDefault(false, metadata),
 			}
 			if blockMapping.Ebs != nil && blockMapping.Ebs.Encrypted != nil {
-				ebsDevice.Encrypted = defsecTypes.BoolDefault(*blockMapping.Ebs.Encrypted, metadata)
+				ebsDevice.Encrypted = tunnelTypes.BoolDefault(*blockMapping.Ebs.Encrypted, metadata)
 			}
 			instance.EBSBlockDevices = append(instance.EBSBlockDevices, ebsDevice)
 		}

@@ -1,10 +1,9 @@
 package scanner
 
 import (
-	"github.com/khulnasoft/defsec/pkg/scanners/options"
-
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
 	"github.com/khulnasoft/tunnel-aws/pkg/progress"
+	"github.com/khulnasoft/tunnel/pkg/iac/scanners/options"
 )
 
 type ConfigurableAWSScanner interface {

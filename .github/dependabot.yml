@@ -5,7 +5,25 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "github.com/khulnasoft/tunnel" ## `tunnel` are updated manually
+    groups:
+      aws:
+        patterns:
+          - "github.com/aws/*"
+      testcontainers:
+        patterns:
+          - "github.com/testcontainers/*"
+      common:
+        exclude-patterns:
+          - "github.com/khulnasoft/tunnel"
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

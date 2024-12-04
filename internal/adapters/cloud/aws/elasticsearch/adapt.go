@@ -3,12 +3,12 @@ package elasticsearch
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/elasticsearch"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/elasticsearch"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -122,35 +122,35 @@ func (a *adapter) adaptDomain(apiDomain types.DomainInfo) (*elasticsearch.Domain
 
 	return &elasticsearch.Domain{
 		Metadata:               metadata,
-		DomainName:             defsecTypes.String(*apiDomain.DomainName, metadata),
-		AccessPolicies:         defsecTypes.String(*status.AccessPolicies, metadata),
-		DedicatedMasterEnabled: defsecTypes.Bool(dedicatedMasterEnabled, metadata),
-		VpcId:                  defsecTypes.String(vpcId, metadata),
+		DomainName:             tunnelTypes.String(*apiDomain.DomainName, metadata),
+		AccessPolicies:         tunnelTypes.String(*status.AccessPolicies, metadata),
+		DedicatedMasterEnabled: tunnelTypes.Bool(dedicatedMasterEnabled, metadata),
+		VpcId:                  tunnelTypes.String(vpcId, metadata),
 		LogPublishing: elasticsearch.LogPublishing{
 			Metadata:              metadata,
-			AuditEnabled:          defsecTypes.Bool(auditEnabled, metadata),
-			CloudWatchLogGroupArn: defsecTypes.String(cloudWatchLogGroupArn, metadata),
+			AuditEnabled:          tunnelTypes.Bool(auditEnabled, metadata),
+			CloudWatchLogGroupArn: tunnelTypes.String(cloudWatchLogGroupArn, metadata),
 		},
 		TransitEncryption: elasticsearch.TransitEncryption{
 			Metadata: metadata,
-			Enabled:  defsecTypes.Bool(transitEncryption, metadata),
+			Enabled:  tunnelTypes.Bool(transitEncryption, metadata),
 		},
 		AtRestEncryption: elasticsearch.AtRestEncryption{
 			Metadata: metadata,
-			Enabled:  defsecTypes.Bool(atRestEncryption, metadata),
-			KmsKeyId: defsecTypes.String(kmskeyId, metadata),
+			Enabled:  tunnelTypes.Bool(atRestEncryption, metadata),
+			KmsKeyId: tunnelTypes.String(kmskeyId, metadata),
 		},
 		Endpoint: elasticsearch.Endpoint{
 			Metadata:     metadata,
-			EnforceHTTPS: defsecTypes.Bool(enforceHTTPS, metadata),
-			TLSPolicy:    defsecTypes.String(tlsPolicy, metadata),
+			EnforceHTTPS: tunnelTypes.Bool(enforceHTTPS, metadata),
+			TLSPolicy:    tunnelTypes.String(tlsPolicy, metadata),
 		},
 		ServiceSoftwareOptions: elasticsearch.ServiceSoftwareOptions{
 			Metadata:        metadata,
-			CurrentVersion:  defsecTypes.String(currentVersion, metadata),
-			NewVersion:      defsecTypes.String(newVersion, metadata),
-			UpdateAvailable: defsecTypes.Bool(updateAvailable, metadata),
-			UpdateStatus:    defsecTypes.String(updatestatus, metadata),
+			CurrentVersion:  tunnelTypes.String(currentVersion, metadata),
+			NewVersion:      tunnelTypes.String(newVersion, metadata),
+			UpdateAvailable: tunnelTypes.Bool(updateAvailable, metadata),
+			UpdateStatus:    tunnelTypes.String(updatestatus, metadata),
 		},
 	}, nil
 }

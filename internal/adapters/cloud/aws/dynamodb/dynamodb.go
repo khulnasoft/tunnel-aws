@@ -4,21 +4,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	dynamodbApi "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	dynamodbTypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/dynamodb"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	aws2 "github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	awsAdapter "github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/dynamodb"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
-	*aws2.RootAdapter
+	*awsAdapter.RootAdapter
 	client *dynamodbApi.Client
 }
 
 func init() {
-	aws2.RegisterServiceAdapter(&adapter{})
+	awsAdapter.RegisterServiceAdapter(&adapter{})
 }
 
 func (a *adapter) Name() string {
@@ -29,7 +29,7 @@ func (a *adapter) Provider() string {
 	return "aws"
 }
 
-func (a *adapter) Adapt(root *aws2.RootAdapter, state *state.State) error {
+func (a *adapter) Adapt(root *awsAdapter.RootAdapter, state *state.State) error {
 	a.RootAdapter = root
 	a.client = dynamodbApi.NewFromConfig(root.SessionConfig())
 	var err error
@@ -78,20 +78,20 @@ func (a *adapter) adaptTable(tableName string) (*dynamodb.Table, error) {
 	}
 	encryption := dynamodb.ServerSideEncryption{
 		Metadata: tableMetadata,
-		Enabled:  defsecTypes.BoolDefault(false, tableMetadata),
-		KMSKeyID: defsecTypes.StringDefault("", tableMetadata),
+		Enabled:  tunnelTypes.BoolDefault(false, tableMetadata),
+		KMSKeyID: tunnelTypes.StringDefault("", tableMetadata),
 	}
 	if table.Table.SSEDescription != nil {
 
 		if table.Table.SSEDescription.Status == dynamodbTypes.SSEStatusEnabled {
-			encryption.Enabled = defsecTypes.BoolDefault(true, tableMetadata)
+			encryption.Enabled = tunnelTypes.BoolDefault(true, tableMetadata)
 		}
 
 		if table.Table.SSEDescription.KMSMasterKeyArn != nil {
-			encryption.KMSKeyID = defsecTypes.StringDefault(*table.Table.SSEDescription.KMSMasterKeyArn, tableMetadata)
+			encryption.KMSKeyID = tunnelTypes.StringDefault(*table.Table.SSEDescription.KMSMasterKeyArn, tableMetadata)
 		}
 	}
-	pitRecovery := defsecTypes.Bool(false, tableMetadata)
+	pitRecovery := tunnelTypes.Bool(false, tableMetadata)
 	continuousBackup, err := a.client.DescribeContinuousBackups(a.Context(), &dynamodbApi.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
 	})
@@ -99,7 +99,7 @@ func (a *adapter) adaptTable(tableName string) (*dynamodb.Table, error) {
 	if err != nil && continuousBackup != nil && continuousBackup.ContinuousBackupsDescription != nil &&
 		continuousBackup.ContinuousBackupsDescription.PointInTimeRecoveryDescription != nil {
 		if continuousBackup.ContinuousBackupsDescription.PointInTimeRecoveryDescription.PointInTimeRecoveryStatus == dynamodbTypes.PointInTimeRecoveryStatusEnabled {
-			pitRecovery = defsecTypes.BoolDefault(true, tableMetadata)
+			pitRecovery = tunnelTypes.BoolDefault(true, tableMetadata)
 		}
 
 	}

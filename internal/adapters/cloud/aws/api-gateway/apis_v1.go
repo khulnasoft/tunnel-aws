@@ -5,10 +5,10 @@ import (
 
 	api "github.com/aws/aws-sdk-go-v2/service/apigateway"
 	agTypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	v1 "github.com/khulnasoft/defsec/pkg/providers/aws/apigateway/v1"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	v1 "github.com/khulnasoft/tunnel/pkg/iac/providers/aws/apigateway/v1"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) getAPIsV1() ([]v1.API, error) {
@@ -71,9 +71,9 @@ func (a *adapter) adaptRestAPIV1(restAPI agTypes.RestApi) (*v1.API, error) {
 		resourcesInput.Position = resourcesOutput.Position
 	}
 
-	name := defsecTypes.StringDefault("", metadata)
+	name := tunnelTypes.StringDefault("", metadata)
 	if restAPI.Name != nil {
-		name = defsecTypes.String(*restAPI.Name, metadata)
+		name = tunnelTypes.String(*restAPI.Name, metadata)
 	}
 
 	return &v1.API{
@@ -96,15 +96,15 @@ func (a *adapter) adaptStageV1(restAPI agTypes.RestApi, stage agTypes.Stage) v1.
 	for method, setting := range stage.MethodSettings {
 		methodSettings = append(methodSettings, v1.RESTMethodSettings{
 			Metadata:           metadata,
-			Method:             defsecTypes.String(method, metadata),
-			CacheDataEncrypted: defsecTypes.Bool(setting.CacheDataEncrypted, metadata),
-			CacheEnabled:       defsecTypes.Bool(setting.CachingEnabled, metadata),
+			Method:             tunnelTypes.String(method, metadata),
+			CacheDataEncrypted: tunnelTypes.Bool(setting.CacheDataEncrypted, metadata),
+			CacheEnabled:       tunnelTypes.Bool(setting.CachingEnabled, metadata),
 		})
 	}
 
-	name := defsecTypes.StringDefault("", metadata)
+	name := tunnelTypes.StringDefault("", metadata)
 	if stage.StageName != nil {
-		name = defsecTypes.String(*stage.StageName, metadata)
+		name = tunnelTypes.String(*stage.StageName, metadata)
 	}
 
 	return v1.Stage{
@@ -112,10 +112,10 @@ func (a *adapter) adaptStageV1(restAPI agTypes.RestApi, stage agTypes.Stage) v1.
 		Name:     name,
 		AccessLogging: v1.AccessLogging{
 			Metadata:              metadata,
-			CloudwatchLogGroupARN: defsecTypes.String(logARN, metadata),
+			CloudwatchLogGroupARN: tunnelTypes.String(logARN, metadata),
 		},
 		RESTMethodSettings: methodSettings,
-		XRayTracingEnabled: defsecTypes.Bool(stage.TracingEnabled, metadata),
+		XRayTracingEnabled: tunnelTypes.Bool(stage.TracingEnabled, metadata),
 	}
 }
 
@@ -130,17 +130,17 @@ func (a *adapter) adaptResourceV1(restAPI agTypes.RestApi, apiResource agTypes.R
 
 	for _, method := range apiResource.ResourceMethods {
 		metadata := a.CreateMetadata(fmt.Sprintf("/restapis/%s/resources/%s/methods/%s", *restAPI.Id, *apiResource.Id, *method.HttpMethod))
-		httpMethod := defsecTypes.StringDefault("", metadata)
+		httpMethod := tunnelTypes.StringDefault("", metadata)
 		if method.HttpMethod != nil {
-			httpMethod = defsecTypes.String(*method.HttpMethod, metadata)
+			httpMethod = tunnelTypes.String(*method.HttpMethod, metadata)
 		}
-		authType := defsecTypes.StringDefault("", metadata)
+		authType := tunnelTypes.StringDefault("", metadata)
 		if method.AuthorizationType != nil {
-			authType = defsecTypes.String(*method.AuthorizationType, metadata)
+			authType = tunnelTypes.String(*method.AuthorizationType, metadata)
 		}
-		keyRequired := defsecTypes.BoolDefault(false, metadata)
+		keyRequired := tunnelTypes.BoolDefault(false, metadata)
 		if method.ApiKeyRequired != nil {
-			keyRequired = defsecTypes.Bool(*method.ApiKeyRequired, metadata)
+			keyRequired = tunnelTypes.Bool(*method.ApiKeyRequired, metadata)
 		}
 		resource.Methods = append(resource.Methods, v1.Method{
 			Metadata:          metadata,

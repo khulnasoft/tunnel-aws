@@ -5,12 +5,12 @@ import (
 
 	api "github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/aws/aws-sdk-go-v2/service/athena/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/athena"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/athena"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -96,9 +96,9 @@ func (a *adapter) adaptWorkgroup(workgroup types.WorkGroupSummary) (*athena.Work
 
 	}
 
-	name := defsecTypes.StringDefault("", metadata)
+	name := tunnelTypes.StringDefault("", metadata)
 	if workgroup.Name != nil {
-		name = defsecTypes.String(*workgroup.Name, metadata)
+		name = tunnelTypes.String(*workgroup.Name, metadata)
 	}
 
 	return &athena.Workgroup{
@@ -106,9 +106,9 @@ func (a *adapter) adaptWorkgroup(workgroup types.WorkGroupSummary) (*athena.Work
 		Name:     name,
 		Encryption: athena.EncryptionConfiguration{
 			Metadata: metadata,
-			Type:     defsecTypes.String(encType, metadata),
+			Type:     tunnelTypes.String(encType, metadata),
 		},
-		EnforceConfiguration: defsecTypes.Bool(enforce, metadata),
+		EnforceConfiguration: tunnelTypes.Bool(enforce, metadata),
 	}, nil
 }
 
@@ -168,9 +168,9 @@ func (a *adapter) getDatabasesForCatalogue(catalog types.DataCatalogSummary) ([]
 
 func (a *adapter) adaptDatabase(database types.Database) (*athena.Database, error) {
 	metadata := a.CreateMetadata("database/" + *database.Name)
-	name := defsecTypes.StringDefault("", metadata)
+	name := tunnelTypes.StringDefault("", metadata)
 	if database.Name != nil {
-		name = defsecTypes.String(*database.Name, metadata)
+		name = tunnelTypes.String(*database.Name, metadata)
 	}
 
 	return &athena.Database{
@@ -179,7 +179,7 @@ func (a *adapter) adaptDatabase(database types.Database) (*athena.Database, erro
 		Encryption: athena.EncryptionConfiguration{
 			Metadata: metadata,
 			// see https://stackoverflow.com/questions/72456689/what-does-encryption-configuration-in-terraform-aws-athena-database-resource
-			Type: defsecTypes.String("", defsecTypes.NewUnmanagedMetadata()),
+			Type: tunnelTypes.String("", tunnelTypes.NewUnmanagedMetadata()),
 		},
 	}, nil
 }

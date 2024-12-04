@@ -3,12 +3,12 @@ package cloudfront
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/cloudfront"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/cloudfront"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -95,7 +95,7 @@ func (a *adapter) adaptDistribution(distribution types.DistributionSummary) (*cl
 	for _, cacheBehaviour := range config.DistributionConfig.CacheBehaviors.Items {
 		cacheBehaviours = append(cacheBehaviours, cloudfront.CacheBehaviour{
 			Metadata:             metadata,
-			ViewerProtocolPolicy: defsecTypes.String(string(cacheBehaviour.ViewerProtocolPolicy), metadata),
+			ViewerProtocolPolicy: tunnelTypes.String(string(cacheBehaviour.ViewerProtocolPolicy), metadata),
 		})
 	}
 
@@ -106,19 +106,19 @@ func (a *adapter) adaptDistribution(distribution types.DistributionSummary) (*cl
 
 	return &cloudfront.Distribution{
 		Metadata: metadata,
-		WAFID:    defsecTypes.String(wafID, metadata),
+		WAFID:    tunnelTypes.String(wafID, metadata),
 		Logging: cloudfront.Logging{
 			Metadata: metadata,
-			Bucket:   defsecTypes.String(loggingBucket, metadata),
+			Bucket:   tunnelTypes.String(loggingBucket, metadata),
 		},
 		DefaultCacheBehaviour: cloudfront.CacheBehaviour{
 			Metadata:             metadata,
-			ViewerProtocolPolicy: defsecTypes.String(defaultCacheBehaviour, metadata),
+			ViewerProtocolPolicy: tunnelTypes.String(defaultCacheBehaviour, metadata),
 		},
 		OrdererCacheBehaviours: cacheBehaviours,
 		ViewerCertificate: cloudfront.ViewerCertificate{
 			Metadata:               metadata,
-			MinimumProtocolVersion: defsecTypes.String(minimumProtocolVersion, metadata),
+			MinimumProtocolVersion: tunnelTypes.String(minimumProtocolVersion, metadata),
 		},
 	}, nil
 }

@@ -3,12 +3,13 @@ package sns
 import (
 	snsapi "github.com/aws/aws-sdk-go-v2/service/sns"
 	snsTypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/sns"
-	"github.com/khulnasoft/defsec/pkg/state"
-	"github.com/khulnasoft/defsec/pkg/types"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/sns"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	"github.com/khulnasoft/tunnel/pkg/iac/types"
+	"github.com/khulnasoft/tunnel/pkg/log"
 )
 
 type adapter struct {
@@ -75,7 +76,8 @@ func (a *adapter) adaptTopic(topic snsTypes.Topic) (*sns.Topic, error) {
 		TopicArn: topic.TopicArn,
 	})
 	if err != nil {
-		a.Debug("Failed to get topic attributes for '%s': %s", *topic.TopicArn, err)
+		a.Logger().Error("Failed to get topic attributes",
+			log.String("ARN", *topic.TopicArn), log.Err(err))
 		return nil, err
 	}
 

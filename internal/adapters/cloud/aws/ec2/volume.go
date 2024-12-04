@@ -5,10 +5,10 @@ import (
 
 	ec2api "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/ec2"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/ec2"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) getVolumes() ([]ec2.Volume, error) {
@@ -49,8 +49,8 @@ func (a *adapter) adaptVolume(volume types.Volume) (*ec2.Volume, error) {
 		Metadata: metadata,
 		Encryption: ec2.Encryption{
 			Metadata: metadata,
-			Enabled:  defsecTypes.Bool(encrypted, metadata),
-			KMSKeyID: defsecTypes.String(kmsKeyId, metadata),
+			Enabled:  tunnelTypes.Bool(encrypted, metadata),
+			KMSKeyID: tunnelTypes.String(kmsKeyId, metadata),
 		},
 	}, nil
 }

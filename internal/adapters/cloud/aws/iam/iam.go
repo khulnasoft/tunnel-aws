@@ -2,10 +2,12 @@ package iam
 
 import (
 	iamapi "github.com/aws/aws-sdk-go-v2/service/iam"
+
 	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/state"
-	"github.com/khulnasoft/defsec/pkg/types"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	"github.com/khulnasoft/tunnel/pkg/iac/types"
+	"github.com/khulnasoft/tunnel/pkg/log"
 )
 
 type adapter struct {
@@ -64,7 +66,7 @@ func (a *adapter) adaptPasswordPolicy(state *state.State) error {
 
 	output, err := a.api.GetAccountPasswordPolicy(a.Context(), &iamapi.GetAccountPasswordPolicyInput{})
 	if err != nil {
-		a.Debug("Failed to adapt account password policy: %s", err)
+		a.Logger().Error("Failed to adapt account password policy", log.Err(err))
 		return nil
 	}
 	a.Tracker().SetTotalResources(1)

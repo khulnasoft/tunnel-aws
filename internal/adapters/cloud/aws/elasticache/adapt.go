@@ -3,12 +3,13 @@ package elasticache
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/elasticache"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/elasticache"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
+	"github.com/khulnasoft/tunnel/pkg/log"
 )
 
 type adapter struct {
@@ -76,19 +77,19 @@ func (a *adapter) getClusters() ([]elasticache.Cluster, error) {
 func (a *adapter) adaptCluster(apiCluster types.CacheCluster) (*elasticache.Cluster, error) {
 	metadata := a.CreateMetadataFromARN(*apiCluster.ARN)
 
-	engine := defsecTypes.StringDefault("", metadata)
+	engine := tunnelTypes.StringDefault("", metadata)
 	if apiCluster.Engine != nil {
-		engine = defsecTypes.String(*apiCluster.Engine, metadata)
+		engine = tunnelTypes.String(*apiCluster.Engine, metadata)
 	}
 
-	nodeType := defsecTypes.StringDefault("", metadata)
+	nodeType := tunnelTypes.StringDefault("", metadata)
 	if apiCluster.CacheNodeType != nil {
-		nodeType = defsecTypes.String(*apiCluster.CacheNodeType, metadata)
+		nodeType = tunnelTypes.String(*apiCluster.CacheNodeType, metadata)
 	}
 
-	limit := defsecTypes.IntDefault(0, metadata)
+	limit := tunnelTypes.IntDefault(0, metadata)
 	if apiCluster.SnapshotRetentionLimit != nil {
-		limit = defsecTypes.Int(int(*apiCluster.SnapshotRetentionLimit), metadata)
+		limit = tunnelTypes.Int(int(*apiCluster.SnapshotRetentionLimit), metadata)
 	}
 
 	return &elasticache.Cluster{
@@ -124,7 +125,7 @@ func (a *adapter) getReplicationGroups() ([]elasticache.ReplicationGroup, error)
 	for _, apiGroup := range apiGroups {
 		group, err := a.adaptReplicationGroup(apiGroup)
 		if err != nil {
-			a.Debug("Failed to adapt replication group '%s': %s", *apiGroup.ARN, err)
+			a.Logger().Error("Failed to adapt replication group", log.String("ARN", *apiGroup.ARN), log.Err(err))
 			continue
 		}
 		groups = append(groups, *group)
@@ -137,13 +138,13 @@ func (a *adapter) getReplicationGroups() ([]elasticache.ReplicationGroup, error)
 func (a *adapter) adaptReplicationGroup(apiGroup types.ReplicationGroup) (*elasticache.ReplicationGroup, error) {
 	metadata := a.CreateMetadataFromARN(*apiGroup.ARN)
 
-	transitEncrypted := defsecTypes.BoolDefault(false, metadata)
+	transitEncrypted := tunnelTypes.BoolDefault(false, metadata)
 	if apiGroup.TransitEncryptionEnabled != nil {
-		transitEncrypted = defsecTypes.Bool(*apiGroup.TransitEncryptionEnabled, metadata)
+		transitEncrypted = tunnelTypes.Bool(*apiGroup.TransitEncryptionEnabled, metadata)
 	}
-	atRestEncrypted := defsecTypes.BoolDefault(false, metadata)
+	atRestEncrypted := tunnelTypes.BoolDefault(false, metadata)
 	if apiGroup.AtRestEncryptionEnabled != nil {
-		atRestEncrypted = defsecTypes.Bool(*apiGroup.AtRestEncryptionEnabled, metadata)
+		atRestEncrypted = tunnelTypes.Bool(*apiGroup.AtRestEncryptionEnabled, metadata)
 	}
 
 	return &elasticache.ReplicationGroup{
@@ -178,7 +179,7 @@ func (a *adapter) getSecurityGroups() ([]elasticache.SecurityGroup, error) {
 	for _, apiGroup := range apiGroups {
 		group, err := a.adaptSecurityGroup(apiGroup)
 		if err != nil {
-			a.Debug("Failed to adapt security group '%s': %s", *apiGroup.ARN, err)
+			a.Logger().Error("Failed to adapt security group", log.String("ARN", *apiGroup.ARN), log.Err(err))
 			continue
 		}
 		groups = append(groups, *group)
@@ -190,9 +191,9 @@ func (a *adapter) getSecurityGroups() ([]elasticache.SecurityGroup, error) {
 
 func (a *adapter) adaptSecurityGroup(apiGroup types.CacheSecurityGroup) (*elasticache.SecurityGroup, error) {
 	metadata := a.CreateMetadataFromARN(*apiGroup.ARN)
-	description := defsecTypes.StringDefault("", metadata)
+	description := tunnelTypes.StringDefault("", metadata)
 	if apiGroup.Description != nil {
-		description = defsecTypes.String(*apiGroup.Description, metadata)
+		description = tunnelTypes.String(*apiGroup.Description, metadata)
 	}
 	return &elasticache.SecurityGroup{
 		Metadata:    metadata,

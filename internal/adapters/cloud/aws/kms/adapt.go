@@ -3,12 +3,12 @@ package kms
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/kms"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/kms"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -78,7 +78,7 @@ func (a *adapter) adaptKey(apiKey types.KeyListEntry) (*kms.Key, error) {
 
 	return &kms.Key{
 		Metadata:        metadata,
-		Usage:           defsecTypes.String(string(output.KeyMetadata.KeyUsage), metadata),
-		RotationEnabled: defsecTypes.Bool(output.KeyMetadata.ValidTo != nil, metadata),
+		Usage:           tunnelTypes.String(string(output.KeyMetadata.KeyUsage), metadata),
+		RotationEnabled: tunnelTypes.Bool(output.KeyMetadata.ValidTo != nil, metadata),
 	}, nil
 }

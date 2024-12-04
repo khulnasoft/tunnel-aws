@@ -1,4 +1,4 @@
-name: test go
+name: Test
 
 on:
   pull_request:
@@ -6,9 +6,11 @@ on:
   schedule:
   - cron:  0 23 * * *
 
+env:
+  GO_VERSION: '1.22'
+
 jobs:
-  build:
-    name: building defsec
+  test:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -17,17 +19,25 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: actions/setup-go@v4
+    - uses: actions/setup-go@v5
       if: matrix.os != 'windows-latest'
       with:
-        go-version-file: go.mod
-        cache: true
-        cache-dependency-path: go.sum
-    - uses: actions/setup-go@v4
+        go-version: ${{ env.GO_VERSION }}
+
+    - uses: actions/setup-go@v5
       if: matrix.os == 'windows-latest'
       with:
-        go-version-file: go.mod
+        go-version: ${{ env.GO_VERSION }}
         cache: false
+
+    - name: go mod tidy
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        go mod tidy
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "Run 'go mod tidy' and push it"
+          exit 1
+        fi
 
     - name: Run non-localstack tests
       if: matrix.os != 'ubuntu-latest'

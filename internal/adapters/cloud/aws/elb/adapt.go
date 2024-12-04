@@ -3,12 +3,12 @@ package elb
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/elb"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/elb"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -102,18 +102,18 @@ func (a *adapter) adaptLoadBalancer(apiLoadBalancer types.LoadBalancer) (*elb.Lo
 				for _, action := range listener.DefaultActions {
 					actions = append(actions, elb.Action{
 						Metadata: metadata,
-						Type:     defsecTypes.String(string(action.Type), metadata),
+						Type:     tunnelTypes.String(string(action.Type), metadata),
 					})
 				}
 
-				sslPolicy := defsecTypes.StringDefault("", metadata)
+				sslPolicy := tunnelTypes.StringDefault("", metadata)
 				if listener.SslPolicy != nil {
-					sslPolicy = defsecTypes.String(*listener.SslPolicy, metadata)
+					sslPolicy = tunnelTypes.String(*listener.SslPolicy, metadata)
 				}
 
 				listeners = append(listeners, elb.Listener{
 					Metadata:       metadata,
-					Protocol:       defsecTypes.String(string(listener.Protocol), metadata),
+					Protocol:       tunnelTypes.String(string(listener.Protocol), metadata),
 					TLSPolicy:      sslPolicy,
 					DefaultActions: actions,
 				})
@@ -127,9 +127,9 @@ func (a *adapter) adaptLoadBalancer(apiLoadBalancer types.LoadBalancer) (*elb.Lo
 
 	return &elb.LoadBalancer{
 		Metadata:                metadata,
-		Type:                    defsecTypes.String(string(apiLoadBalancer.Type), metadata),
-		DropInvalidHeaderFields: defsecTypes.Bool(dropInvalidHeaders, metadata),
-		Internal:                defsecTypes.Bool(apiLoadBalancer.Scheme == types.LoadBalancerSchemeEnumInternal, metadata),
+		Type:                    tunnelTypes.String(string(apiLoadBalancer.Type), metadata),
+		DropInvalidHeaderFields: tunnelTypes.Bool(dropInvalidHeaders, metadata),
+		Internal:                tunnelTypes.Bool(apiLoadBalancer.Scheme == types.LoadBalancerSchemeEnumInternal, metadata),
 		Listeners:               listeners,
 	}, nil
 }

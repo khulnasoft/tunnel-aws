@@ -3,8 +3,9 @@ package api_gateway
 import (
 	apiv1 "github.com/aws/aws-sdk-go-v2/service/apigateway"
 	apiv2 "github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	"github.com/khulnasoft/defsec/pkg/state"
+
 	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
 )
 
 type adapter struct {

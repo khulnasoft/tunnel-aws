@@ -2,10 +2,10 @@ package ecs
 
 import (
 	ecsapi "github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/ecs"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/ecs"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) getTaskDefinitions() ([]ecs.TaskDefinition, error) {
@@ -54,8 +54,8 @@ func (a *adapter) adaptTaskDefinition(arn string) (*ecs.TaskDefinition, error) {
 				hostPort = int(*apiMapping.HostPort)
 			}
 			portMappings = append(portMappings, ecs.PortMapping{
-				ContainerPort: defsecTypes.Int(containerPort, metadata),
-				HostPort:      defsecTypes.Int(hostPort, metadata),
+				ContainerPort: tunnelTypes.Int(containerPort, metadata),
+				HostPort:      tunnelTypes.Int(hostPort, metadata),
 			})
 		}
 
@@ -89,14 +89,14 @@ func (a *adapter) adaptTaskDefinition(arn string) (*ecs.TaskDefinition, error) {
 
 		containerDefinitions = append(containerDefinitions, ecs.ContainerDefinition{
 			Metadata:     metadata,
-			Name:         defsecTypes.String(name, metadata),
-			Image:        defsecTypes.String(image, metadata),
-			CPU:          defsecTypes.Int(cpu, metadata),
-			Memory:       defsecTypes.Int(memory, metadata),
-			Essential:    defsecTypes.Bool(essential, metadata),
+			Name:         tunnelTypes.String(name, metadata),
+			Image:        tunnelTypes.String(image, metadata),
+			CPU:          tunnelTypes.Int(cpu, metadata),
+			Memory:       tunnelTypes.Int(memory, metadata),
+			Essential:    tunnelTypes.Bool(essential, metadata),
 			PortMappings: portMappings,
 			Environment:  envVars,
-			Privileged:   defsecTypes.Bool(apiContainer.Privileged != nil && *apiContainer.Privileged, metadata),
+			Privileged:   tunnelTypes.Bool(apiContainer.Privileged != nil && *apiContainer.Privileged, metadata),
 		})
 	}
 
@@ -107,7 +107,7 @@ func (a *adapter) adaptTaskDefinition(arn string) (*ecs.TaskDefinition, error) {
 			Metadata: metadata,
 			EFSVolumeConfiguration: ecs.EFSVolumeConfiguration{
 				Metadata:                 metadata,
-				TransitEncryptionEnabled: defsecTypes.Bool(encrypted, metadata),
+				TransitEncryptionEnabled: tunnelTypes.Bool(encrypted, metadata),
 			},
 		})
 	}

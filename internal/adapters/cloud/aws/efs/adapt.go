@@ -3,12 +3,12 @@ package efs
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/efs"
 	"github.com/aws/aws-sdk-go-v2/service/efs/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/efs"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/efs"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -67,9 +67,9 @@ func (a *adapter) getFilesystems() ([]efs.FileSystem, error) {
 
 func (a *adapter) adaptFilesystem(apiFilesystem types.FileSystemDescription) (*efs.FileSystem, error) {
 	metadata := a.CreateMetadataFromARN(*apiFilesystem.FileSystemArn)
-	encrypted := defsecTypes.BoolDefault(false, metadata)
+	encrypted := tunnelTypes.BoolDefault(false, metadata)
 	if apiFilesystem.Encrypted != nil {
-		encrypted = defsecTypes.Bool(*apiFilesystem.Encrypted, metadata)
+		encrypted = tunnelTypes.Bool(*apiFilesystem.Encrypted, metadata)
 	}
 	return &efs.FileSystem{
 		Metadata:  metadata,

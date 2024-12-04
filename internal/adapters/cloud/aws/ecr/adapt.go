@@ -3,14 +3,14 @@ package ecr
 import (
 	ecrapi "github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/ecr"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/liamg/iamgo"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/ecr"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -93,9 +93,9 @@ func (a *adapter) adaptRepository(apiRepository types.Repository) (*ecr.Reposito
 		if err != nil {
 			return nil, err
 		}
-		name := defsecTypes.StringDefault("", metadata)
+		name := tunnelTypes.StringDefault("", metadata)
 		if output.RepositoryName != nil {
-			name = defsecTypes.String(*output.RepositoryName, metadata)
+			name = tunnelTypes.String(*output.RepositoryName, metadata)
 		}
 		policies = append(policies, iam.Policy{
 			Metadata: metadata,
@@ -104,7 +104,7 @@ func (a *adapter) adaptRepository(apiRepository types.Repository) (*ecr.Reposito
 				Metadata: metadata,
 				Parsed:   *parsed,
 			},
-			Builtin: defsecTypes.Bool(false, metadata),
+			Builtin: tunnelTypes.Bool(false, metadata),
 		})
 	}
 
@@ -112,14 +112,14 @@ func (a *adapter) adaptRepository(apiRepository types.Repository) (*ecr.Reposito
 		Metadata: metadata,
 		ImageScanning: ecr.ImageScanning{
 			Metadata:   metadata,
-			ScanOnPush: defsecTypes.Bool(scanOnPush, metadata),
+			ScanOnPush: tunnelTypes.Bool(scanOnPush, metadata),
 		},
-		ImageTagsImmutable: defsecTypes.Bool(immutable, metadata),
+		ImageTagsImmutable: tunnelTypes.Bool(immutable, metadata),
 		Policies:           policies,
 		Encryption: ecr.Encryption{
 			Metadata: metadata,
-			Type:     defsecTypes.String(encType, metadata),
-			KMSKeyID: defsecTypes.String(encKey, metadata),
+			Type:     tunnelTypes.String(encType, metadata),
+			KMSKeyID: tunnelTypes.String(encKey, metadata),
 		},
 	}, nil
 }

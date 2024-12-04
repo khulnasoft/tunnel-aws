@@ -3,15 +3,16 @@ package lambda
 import (
 	"strings"
 
+	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	lambdaapi "github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/lambda"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 	"github.com/liamg/iamgo"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/lambda"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -80,11 +81,13 @@ func (a *adapter) adaptFunction(function types.FunctionConfiguration) (*lambda.F
 	}
 
 	var permissions []lambda.Permission
-	if output, err := a.api.GetPolicy(a.Context(), &lambdaapi.GetPolicyInput{
+	getPolicyResult, err := a.api.GetPolicy(a.Context(), &lambdaapi.GetPolicyInput{
 		FunctionName: function.FunctionName,
 		Qualifier:    function.Version,
-	}); err == nil {
-		parsed, err := iamgo.ParseString(*output.Policy)
+	})
+
+	if err == nil {
+		parsed, err := iamgo.ParseString(awssdk.ToString(getPolicyResult.Policy))
 		if err != nil {
 			return nil, err
 		}
@@ -118,8 +121,8 @@ func (a *adapter) adaptFunction(function types.FunctionConfiguration) (*lambda.F
 
 			permissions = append(permissions, lambda.Permission{
 				Metadata:  metadata,
-				Principal: defsecTypes.String(principal, metadata),
-				SourceARN: defsecTypes.String(source, metadata),
+				Principal: tunnelTypes.String(principal, metadata),
+				SourceARN: tunnelTypes.String(source, metadata),
 			})
 		}
 	}
@@ -128,7 +131,7 @@ func (a *adapter) adaptFunction(function types.FunctionConfiguration) (*lambda.F
 		Metadata: metadata,
 		Tracing: lambda.Tracing{
 			Metadata: metadata,
-			Mode:     defsecTypes.String(tracingMode, metadata),
+			Mode:     tunnelTypes.String(tracingMode, metadata),
 		},
 		Permissions: permissions,
 	}, nil

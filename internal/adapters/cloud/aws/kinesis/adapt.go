@@ -2,12 +2,12 @@ package kinesis
 
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/kinesis"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/kinesis"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/kinesis"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -86,8 +86,8 @@ func (a *adapter) adaptStream(streamName string) (*kinesis.Stream, error) {
 		Metadata: metadata,
 		Encryption: kinesis.Encryption{
 			Metadata: metadata,
-			Type:     defsecTypes.String(string(output.StreamDescription.EncryptionType), metadata),
-			KMSKeyID: defsecTypes.String(kmsKeyId, metadata),
+			Type:     tunnelTypes.String(string(output.StreamDescription.EncryptionType), metadata),
+			KMSKeyID: tunnelTypes.String(kmsKeyId, metadata),
 		},
 	}, nil
 

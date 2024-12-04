@@ -6,12 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	api "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	aatypes "github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/accessanalyzer"
-	"github.com/khulnasoft/defsec/pkg/state"
-	"github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/accessanalyzer"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	"github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {

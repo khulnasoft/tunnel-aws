@@ -1,26 +1,26 @@
 package sqs
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
+	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	sqsApi "github.com/aws/aws-sdk-go-v2/service/sqs"
 	sqsTypes "github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	aws2 "github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/sqs"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 	"github.com/liamg/iamgo"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/sqs"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
-	*aws2.RootAdapter
+	*aws.RootAdapter
 	client *sqsApi.Client
 }
 
 func init() {
-	aws2.RegisterServiceAdapter(&adapter{})
+	aws.RegisterServiceAdapter(&adapter{})
 }
 
 func (a *adapter) Provider() string {
@@ -31,7 +31,7 @@ func (a *adapter) Name() string {
 	return "sqs"
 }
 
-func (a *adapter) Adapt(root *aws2.RootAdapter, state *state.State) error {
+func (a *adapter) Adapt(root *aws.RootAdapter, state *state.State) error {
 
 	a.RootAdapter = root
 	a.client = sqsApi.NewFromConfig(root.SessionConfig())
@@ -73,7 +73,7 @@ func (a *adapter) adaptQueue(queueUrl string) (*sqs.Queue, error) {
 
 	// make another call to get the attributes for the Queue
 	queueAttributes, err := a.client.GetQueueAttributes(a.Context(), &sqsApi.GetQueueAttributesInput{
-		QueueUrl: aws.String(queueUrl),
+		QueueUrl: awssdk.String(queueUrl),
 		AttributeNames: []sqsTypes.QueueAttributeName{
 			sqsTypes.QueueAttributeNameSqsManagedSseEnabled,
 			sqsTypes.QueueAttributeNameKmsMasterKeyId,
@@ -90,12 +90,12 @@ func (a *adapter) adaptQueue(queueUrl string) (*sqs.Queue, error) {
 
 	queue := &sqs.Queue{
 		Metadata: queueMetadata,
-		QueueURL: defsecTypes.String(queueUrl, queueMetadata),
+		QueueURL: tunnelTypes.String(queueUrl, queueMetadata),
 		Policies: []iam.Policy{},
 		Encryption: sqs.Encryption{
 			Metadata:          queueMetadata,
-			KMSKeyID:          defsecTypes.StringDefault("", queueMetadata),
-			ManagedEncryption: defsecTypes.BoolDefault(false, queueMetadata),
+			KMSKeyID:          tunnelTypes.StringDefault("", queueMetadata),
+			ManagedEncryption: tunnelTypes.BoolDefault(false, queueMetadata),
 		},
 	}
 
@@ -104,11 +104,11 @@ func (a *adapter) adaptQueue(queueUrl string) (*sqs.Queue, error) {
 	queuePolicy := queueAttributes.Attributes[string(sqsTypes.QueueAttributeNamePolicy)]
 
 	if sseEncrypted == "SSE-SQS" || sseEncrypted == "SSE-KMS" {
-		queue.Encryption.ManagedEncryption = defsecTypes.Bool(true, queueMetadata)
+		queue.Encryption.ManagedEncryption = tunnelTypes.Bool(true, queueMetadata)
 	}
 
 	if kmsEncryption != "" {
-		queue.Encryption.KMSKeyID = defsecTypes.String(kmsEncryption, queueMetadata)
+		queue.Encryption.KMSKeyID = tunnelTypes.String(kmsEncryption, queueMetadata)
 	}
 
 	if queuePolicy != "" {
@@ -117,12 +117,12 @@ func (a *adapter) adaptQueue(queueUrl string) (*sqs.Queue, error) {
 
 			queue.Policies = append(queue.Policies, iam.Policy{
 				Metadata: queueMetadata,
-				Name:     defsecTypes.StringDefault("", queueMetadata),
+				Name:     tunnelTypes.StringDefault("", queueMetadata),
 				Document: iam.Document{
 					Metadata: queueMetadata,
 					Parsed:   *policy,
 				},
-				Builtin: defsecTypes.Bool(false, queueMetadata),
+				Builtin: tunnelTypes.Bool(false, queueMetadata),
 			})
 
 		}

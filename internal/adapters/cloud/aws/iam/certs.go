@@ -3,14 +3,13 @@ package iam
 import (
 	"fmt"
 
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-
 	iamapi "github.com/aws/aws-sdk-go-v2/service/iam"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/state"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) adaptServerCertificates(state *state.State) error {
@@ -52,9 +51,9 @@ func (a *adapter) adaptServerCertificate(certInfo iamtypes.ServerCertificateMeta
 
 	metadata := a.CreateMetadataFromARN(*cert.ServerCertificate.ServerCertificateMetadata.Arn)
 
-	expiration := defsecTypes.TimeUnresolvable(metadata)
+	expiration := tunnelTypes.TimeUnresolvable(metadata)
 	if cert.ServerCertificate.ServerCertificateMetadata.Expiration != nil {
-		expiration = defsecTypes.Time(*cert.ServerCertificate.ServerCertificateMetadata.Expiration, metadata)
+		expiration = tunnelTypes.Time(*cert.ServerCertificate.ServerCertificateMetadata.Expiration, metadata)
 	}
 
 	return &iam.ServerCertificate{

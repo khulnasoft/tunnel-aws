@@ -2,13 +2,14 @@ package documentdb
 
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/docdb"
-	"github.com/aws/aws-sdk-go-v2/service/docdb/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/documentdb"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
+	docdbTypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel-aws/pkg/types"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/documentdb"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -46,7 +47,7 @@ func (a *adapter) getClusters() ([]documentdb.Cluster, error) {
 
 	a.Tracker().SetServiceLabel("Discovering clusters...")
 
-	var apiClusters []types.DBCluster
+	var apiClusters []docdbTypes.DBCluster
 	var input api.DescribeDBClustersInput
 	for {
 		output, err := a.client.DescribeDBClusters(a.Context(), &input)
@@ -65,23 +66,13 @@ func (a *adapter) getClusters() ([]documentdb.Cluster, error) {
 	return concurrency.Adapt(apiClusters, a.RootAdapter, a.adaptCluster), nil
 }
 
-func (a *adapter) adaptCluster(cluster types.DBCluster) (*documentdb.Cluster, error) {
+func (a *adapter) adaptCluster(cluster docdbTypes.DBCluster) (*documentdb.Cluster, error) {
 
 	metadata := a.CreateMetadataFromARN(*cluster.DBClusterArn)
 
-	var logExports []defsecTypes.StringValue
+	var logExports []tunnelTypes.StringValue
 	for _, export := range cluster.EnabledCloudwatchLogsExports {
-		logExports = append(logExports, defsecTypes.String(export, metadata))
-	}
-
-	var kmsKeyId string
-	if cluster.KmsKeyId != nil {
-		kmsKeyId = *cluster.KmsKeyId
-	}
-
-	var identifier string
-	if cluster.DBClusterIdentifier != nil {
-		identifier = *cluster.DBClusterIdentifier
+		logExports = append(logExports, tunnelTypes.String(export, metadata))
 	}
 
 	var instances []documentdb.Instance
@@ -98,17 +89,17 @@ func (a *adapter) adaptCluster(cluster types.DBCluster) (*documentdb.Cluster, er
 		}
 		instances = append(instances, documentdb.Instance{
 			Metadata: metadata,
-			KMSKeyID: defsecTypes.String(kmsKeyId, metadata),
+			KMSKeyID: tunnelTypes.String(kmsKeyId, metadata),
 		})
 	}
 
 	return &documentdb.Cluster{
 		Metadata:              metadata,
-		Identifier:            defsecTypes.String(identifier, metadata),
+		Identifier:            types.ToString(cluster.DBClusterIdentifier, metadata),
 		EnabledLogExports:     logExports,
 		Instances:             instances,
-		StorageEncrypted:      defsecTypes.Bool(cluster.StorageEncrypted, metadata),
-		KMSKeyID:              defsecTypes.String(kmsKeyId, metadata),
-		BackupRetentionPeriod: defsecTypes.Int(int(*cluster.BackupRetentionPeriod), metadata),
+		StorageEncrypted:      types.ToBool(cluster.StorageEncrypted, metadata),
+		KMSKeyID:              types.ToString(cluster.KmsKeyId, metadata),
+		BackupRetentionPeriod: types.ToInt(cluster.BackupRetentionPeriod, metadata),
 	}, nil
 }

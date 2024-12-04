@@ -6,12 +6,12 @@ import (
 
 	iamapi "github.com/aws/aws-sdk-go-v2/service/iam"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 	"github.com/liamg/iamgo"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) adaptPolicies(state *state.State) error {
@@ -66,9 +66,9 @@ func (a *adapter) adaptPolicy(apiPolicy iamtypes.Policy) (*iam.Policy, error) {
 		return nil, err
 	}
 
-	name := defsecTypes.StringDefault("", metadata)
+	name := tunnelTypes.StringDefault("", metadata)
 	if apiPolicy.PolicyName != nil {
-		name = defsecTypes.String(*apiPolicy.PolicyName, metadata)
+		name = tunnelTypes.String(*apiPolicy.PolicyName, metadata)
 	}
 
 	return &iam.Policy{
@@ -78,7 +78,7 @@ func (a *adapter) adaptPolicy(apiPolicy iamtypes.Policy) (*iam.Policy, error) {
 			Metadata: metadata,
 			Parsed:   *document,
 		},
-		Builtin: defsecTypes.Bool(strings.HasPrefix(*apiPolicy.Arn, "arn:aws:iam::aws:"), metadata),
+		Builtin: tunnelTypes.Bool(strings.HasPrefix(*apiPolicy.Arn, "arn:aws:iam::aws:"), metadata),
 	}, nil
 }
 

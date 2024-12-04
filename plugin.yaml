@@ -1,0 +1,35 @@
+name: aws
+repository: github.com/khulnasoft/tunnel-aws
+maintainer: khulnasoft
+summary: Tunnel AWS Cloud scanning plugin
+version: "0.14.2"
+usage: AWS Tunnel plugin
+description: |-
+  Tunnel AWS plugin for the Tunnel security scanner
+  https://github.com/khulnasoft/tunnel-aws
+platforms:
+  - selector:
+      os: darwin
+      arch: amd64
+    uri: https://github.com/khulnasoft/tunnel-aws/releases/download/v0.14.2/tunnel-aws-darwin-amd64.tar.gz
+    bin: ./tunnel-aws-darwin-amd64
+  - selector:
+      os: darwin
+      arch: arm64
+    uri: https://github.com/khulnasoft/tunnel-aws/releases/download/v0.14.2/tunnel-aws-darwin-arm64.tar.gz
+    bin: ./tunnel-aws-darwin-arm64
+  - selector:
+      os: linux
+      arch: amd64
+    uri: https://github.com/khulnasoft/tunnel-aws/releases/download/v0.14.2/tunnel-aws-linux-amd64.tar.gz
+    bin: ./tunnel-aws-linux-amd64
+  - selector:
+      os: linux
+      arch: arm64
+    uri: https://github.com/khulnasoft/tunnel-aws/releases/download/v0.14.2/tunnel-aws-linux-arm64.tar.gz
+    bin: ./tunnel-aws-linux-arm64
+  - selector:
+      os: windows
+      arch: amd64
+    uri: https://github.com/khulnasoft/tunnel-aws/releases/download/v0.14.2/tunnel-aws-windows-amd64.tar.gz
+    bin: ./tunnel-aws-windows-amd64

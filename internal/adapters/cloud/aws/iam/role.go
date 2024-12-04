@@ -5,11 +5,12 @@ import (
 
 	iamapi "github.com/aws/aws-sdk-go-v2/service/iam"
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/iam"
-	"github.com/khulnasoft/defsec/pkg/state"
-	"github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/iam"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	"github.com/khulnasoft/tunnel/pkg/iac/types"
+	"github.com/khulnasoft/tunnel/pkg/log"
 )
 
 func (a *adapter) adaptRoles(state *state.State) error {
@@ -55,14 +56,16 @@ func (a *adapter) adaptRole(apiRole iamtypes.Role) (*iam.Role, error) {
 	for {
 		policiesOutput, err := a.api.ListAttachedRolePolicies(a.Context(), input)
 		if err != nil {
-			a.Debug("Failed to locate policies attached to role '%s': %s", *apiRole.RoleName, err)
+			a.Logger().Error("Failed to locate policies attached to role",
+				log.String("name", *apiRole.RoleName), log.Err(err))
 			break
 		}
 
 		for _, apiPolicy := range policiesOutput.AttachedPolicies {
 			policy, err := a.adaptAttachedPolicy(apiPolicy)
 			if err != nil {
-				a.Debug("Failed to adapt policy attached to role '%s': %s", *apiRole.RoleName, err)
+				a.Logger().Error("Failed to adapt policy attached to role",
+					log.String("name", *apiRole.RoleName), log.Err(err))
 				continue
 			}
 			policies = append(policies, *policy)

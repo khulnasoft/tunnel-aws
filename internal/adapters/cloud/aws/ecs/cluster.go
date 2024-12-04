@@ -5,10 +5,10 @@ import (
 
 	ecsapi "github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/ecs"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/ecs"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) getClusters() ([]ecs.Cluster, error) {
@@ -65,7 +65,7 @@ func (a *adapter) adaptCluster(arn string) (*ecs.Cluster, error) {
 		Metadata: metadata,
 		Settings: ecs.ClusterSettings{
 			Metadata:                 metadata,
-			ContainerInsightsEnabled: defsecTypes.Bool(enableInsights, metadata),
+			ContainerInsightsEnabled: tunnelTypes.Bool(enableInsights, metadata),
 		},
 	}, nil
 }

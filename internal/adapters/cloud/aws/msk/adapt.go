@@ -1,14 +1,15 @@
 package msk
 
 import (
+	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	api "github.com/aws/aws-sdk-go-v2/service/kafka"
 	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/msk"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/msk"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 type adapter struct {
@@ -86,13 +87,13 @@ func (a *adapter) adaptCluster(apiCluster types.ClusterInfo) (*msk.Cluster, erro
 	if apiCluster.LoggingInfo != nil && apiCluster.LoggingInfo.BrokerLogs != nil {
 		logs := apiCluster.LoggingInfo.BrokerLogs
 		if logs.S3 != nil {
-			logS3 = logs.S3.Enabled
+			logS3 = awssdk.ToBool(logs.S3.Enabled)
 		}
 		if logs.CloudWatchLogs != nil {
-			logCW = logs.CloudWatchLogs.Enabled
+			logCW = awssdk.ToBool(logs.CloudWatchLogs.Enabled)
 		}
 		if logs.Firehose != nil {
-			logFH = logs.Firehose.Enabled
+			logFH = awssdk.ToBool(logs.Firehose.Enabled)
 		}
 	}
 
@@ -100,12 +101,12 @@ func (a *adapter) adaptCluster(apiCluster types.ClusterInfo) (*msk.Cluster, erro
 		Metadata: metadata,
 		EncryptionInTransit: msk.EncryptionInTransit{
 			Metadata:     metadata,
-			ClientBroker: defsecTypes.String(encInTransitClientBroker, metadata),
+			ClientBroker: tunnelTypes.String(encInTransitClientBroker, metadata),
 		},
 		EncryptionAtRest: msk.EncryptionAtRest{
 			Metadata:  metadata,
-			KMSKeyARN: defsecTypes.String(encAtRestKMSKeyId, metadata),
-			Enabled:   defsecTypes.Bool(encAtRestEnabled, metadata),
+			KMSKeyARN: tunnelTypes.String(encAtRestKMSKeyId, metadata),
+			Enabled:   tunnelTypes.Bool(encAtRestEnabled, metadata),
 		},
 		Logging: msk.Logging{
 			Metadata: metadata,
@@ -113,15 +114,15 @@ func (a *adapter) adaptCluster(apiCluster types.ClusterInfo) (*msk.Cluster, erro
 				Metadata: metadata,
 				S3: msk.S3Logging{
 					Metadata: metadata,
-					Enabled:  defsecTypes.Bool(logS3, metadata),
+					Enabled:  tunnelTypes.Bool(logS3, metadata),
 				},
 				Cloudwatch: msk.CloudwatchLogging{
 					Metadata: metadata,
-					Enabled:  defsecTypes.Bool(logCW, metadata),
+					Enabled:  tunnelTypes.Bool(logCW, metadata),
 				},
 				Firehose: msk.FirehoseLogging{
 					Metadata: metadata,
-					Enabled:  defsecTypes.Bool(logFH, metadata),
+					Enabled:  tunnelTypes.Bool(logFH, metadata),
 				},
 			},
 		},

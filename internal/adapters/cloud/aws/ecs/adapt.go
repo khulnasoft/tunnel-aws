@@ -2,8 +2,9 @@ package ecs
 
 import (
 	ecsapi "github.com/aws/aws-sdk-go-v2/service/ecs"
-	"github.com/khulnasoft/defsec/pkg/state"
+
 	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
 )
 
 type adapter struct {

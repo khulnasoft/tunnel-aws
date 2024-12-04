@@ -5,10 +5,10 @@ import (
 
 	api "github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	agTypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
-	v2 "github.com/khulnasoft/defsec/pkg/providers/aws/apigateway/v2"
-	"github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	v2 "github.com/khulnasoft/tunnel/pkg/iac/providers/aws/apigateway/v2"
+	"github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) getAPIsV2() ([]v2.API, error) {

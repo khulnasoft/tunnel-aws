@@ -6,11 +6,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	ec2api "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	aws2 "github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws/test"
-	"github.com/khulnasoft/defsec/pkg/state"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	awsAdapter "github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws/test"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
 )
 
 type volumeDetails struct {
@@ -113,7 +114,7 @@ func Test_EC2RootVolumeEncrypted(t *testing.T) {
 	}
 }
 
-func bootstrapEC2Instance(t *testing.T, ra *aws2.RootAdapter, spec instanceDetails) *string {
+func bootstrapEC2Instance(t *testing.T, ra *awsAdapter.RootAdapter, spec instanceDetails) *string {
 
 	api := ec2api.NewFromConfig(ra.SessionConfig())
 
@@ -150,7 +151,7 @@ func bootstrapVolume(blockMappings []ec2Types.BlockDeviceMapping, deviceName str
 	return blockMappings
 }
 
-func removeInstance(t *testing.T, ra *aws2.RootAdapter, instanceID *string) {
+func removeInstance(t *testing.T, ra *awsAdapter.RootAdapter, instanceID *string) {
 
 	api := ec2api.NewFromConfig(ra.SessionConfig())
 

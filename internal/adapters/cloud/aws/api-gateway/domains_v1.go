@@ -5,10 +5,10 @@ import (
 
 	api "github.com/aws/aws-sdk-go-v2/service/apigateway"
 	agTypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	v1 "github.com/khulnasoft/defsec/pkg/providers/aws/apigateway/v1"
-	"github.com/khulnasoft/defsec/pkg/types"
 
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	v1 "github.com/khulnasoft/tunnel/pkg/iac/providers/aws/apigateway/v1"
+	"github.com/khulnasoft/tunnel/pkg/iac/types"
 )
 
 func (a *adapter) getDomainNamesv1() ([]v1.DomainName, error) {

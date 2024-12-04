@@ -1,6 +1,24 @@
+SED=$(shell command -v gsed || command -v sed)
+
 .PHONY: test
 test:
 	go test -race ./...
+
+PLATFORMS = linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
+OUTPUTS = $(patsubst %,%/tunnel-aws,$(PLATFORMS))
+build: clean $(OUTPUTS)
+# os/arch/tunnel-aws
+%/tunnel-aws:
+	@mkdir -p $(dir $@); \
+	GOOS=$(word 1,$(subst /, ,$*)); \
+	GOARCH=$(word 2,$(subst /, ,$*)); \
+	CGO_ENABLED=0 GOOS=$$GOOS GOARCH=$$GOARCH go build -ldflags "-s -w" -o tunnel-aws-$$GOOS-$$GOARCH ./cmd/tunnel-aws/main.go; \
+	if [ $$GOOS = "windows" ]; then \
+		mv tunnel-aws-$$GOOS-$$GOARCH tunnel-aws-$$GOOS-$$GOARCH.exe; \
+		tar -cvzf tunnel-aws-$$GOOS-$$GOARCH.tar.gz plugin.yaml tunnel-aws-$$GOOS-$$GOARCH.exe LICENSE; \
+	else \
+		tar -cvzf tunnel-aws-$$GOOS-$$GOARCH.tar.gz plugin.yaml tunnel-aws-$$GOOS-$$GOARCH LICENSE; \
+	fi
 
 .PHONY: test-no-localstack
 test-no-localstack:
@@ -8,10 +26,22 @@ test-no-localstack:
 
 .PHONY: quality
 quality:
-	which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.52.2
-	golangci-lint run --timeout 5m --verbose
+	which golangci-lint || go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.61.0
+	golangci-lint run --timeout 3m --verbose
 
 .PHONY: update-aws-deps
 update-aws-deps:
-	@grep aws-sdk-go-v2 go.mod | grep -v '// indirect' | sed 's/^[\t\s]*//g' | sed 's/\s.*//g' | xargs go get
+	@grep aws-sdk-go-v2 go.mod | grep -v '// indirect' | sed 's/^[ [[:blank:]]]*//g' | sed 's/[[:space:]]v.*//g' | xargs go get
 	@go mod tidy
+
+.PHONY: clean
+clean:
+	rm -rf tunnel-aws*
+
+.PHONY: bump-manifest
+bump-manifest:
+	@[ $$NEW_VERSION ] || ( echo "env 'NEW_VERSION' is not set"; exit 1 )
+	@current_version=$$(cat plugin.yaml | grep 'version' | awk '{ print $$2}' | tr -d '"') ;\
+	echo Current version: $$current_version ;\
+	echo New version: $$NEW_VERSION ;\
+	$(SED) -i -e "s/$$current_version/$$NEW_VERSION/g" plugin.yaml ;\

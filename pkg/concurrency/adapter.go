@@ -3,13 +3,12 @@ package concurrency
 import (
 	"sync"
 
-	"github.com/khulnasoft/defsec/pkg/state"
-
 	"github.com/khulnasoft/tunnel-aws/pkg/progress"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	"github.com/khulnasoft/tunnel/pkg/log"
 )
 
 type Context interface {
-	Debug(format string, args ...interface{})
 	ConcurrencyStrategy() Strategy
 	Tracker() progress.ServiceTracker
 }
@@ -22,7 +21,10 @@ func Adapt[T any, S any](items []T, ctx Context, adapt func(T) (*S, error)) []S 
 
 func AdaptWithState[T any, S any](items []T, currentState *state.State, ctx Context, adapt func(T, *state.State) (*S, error)) []S {
 	processes := getProcessCount(ctx.ConcurrencyStrategy())
-	ctx.Debug("Using %d processes to adapt %d resources", processes, len(items))
+
+	// TODO: use InfoContext
+	log.Info("Start concurrent adapt",
+		log.Int("processes", processes), log.Int("resources", len(items)))
 
 	mu := sync.Mutex{}
 
@@ -43,7 +45,8 @@ func AdaptWithState[T any, S any](items []T, currentState *state.State, ctx Cont
 				out, err := adapt(in, currentState)
 				ctx.Tracker().IncrementResource()
 				if err != nil {
-					ctx.Debug("Error while adapting resource %v: %w", in, err)
+					// TODO: use ErrorContext
+					log.Error("Error to adapt resource", log.Any("resource", in), log.Err(err))
 					continue
 				}
 

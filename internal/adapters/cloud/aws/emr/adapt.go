@@ -3,12 +3,13 @@ package emr
 import (
 	api "github.com/aws/aws-sdk-go-v2/service/emr"
 	"github.com/aws/aws-sdk-go-v2/service/emr/types"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/emr"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
-	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/emr"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
+	"github.com/khulnasoft/tunnel/pkg/log"
 )
 
 type adapter struct {
@@ -81,19 +82,19 @@ func (a *adapter) adaptCluster(apiCluster types.ClusterSummary) (*emr.Cluster, e
 		return nil, err
 	}
 
-	name := defsecTypes.StringDefault("", metadata)
+	name := tunnelTypes.StringDefault("", metadata)
 	if apiCluster.Name != nil {
-		name = defsecTypes.String(*apiCluster.Name, metadata)
+		name = tunnelTypes.String(*apiCluster.Name, metadata)
 	}
 
-	releaseLabel := defsecTypes.StringDefault("", metadata)
+	releaseLabel := tunnelTypes.StringDefault("", metadata)
 	if output.Cluster != nil && output.Cluster.ReleaseLabel != nil {
-		releaseLabel = defsecTypes.String(*output.Cluster.ReleaseLabel, metadata)
+		releaseLabel = tunnelTypes.String(*output.Cluster.ReleaseLabel, metadata)
 	}
 
-	serviceRole := defsecTypes.StringDefault("", metadata)
+	serviceRole := tunnelTypes.StringDefault("", metadata)
 	if output.Cluster != nil && output.Cluster.ServiceRole != nil {
-		serviceRole = defsecTypes.String(*output.Cluster.ServiceRole, metadata)
+		serviceRole = tunnelTypes.String(*output.Cluster.ServiceRole, metadata)
 	}
 
 	return &emr.Cluster{
@@ -131,7 +132,8 @@ func (a *adapter) getSecurityConfigurations() ([]emr.SecurityConfiguration, erro
 	for _, apiConfig := range apiConfigs {
 		config, err := a.adaptConfig(apiConfig)
 		if err != nil {
-			a.Debug("Failed to adapt security configuration '%s': %s", *apiConfig.Name, err)
+			a.Logger().Error("Failed to adapt security configuration",
+				log.String("name", *apiConfig.Name), log.Err(err))
 			continue
 		}
 		configs = append(configs, *config)
@@ -152,14 +154,14 @@ func (a *adapter) adaptConfig(config types.SecurityConfigurationSummary) (*emr.S
 		return nil, err
 	}
 
-	name := defsecTypes.StringDefault("", metadata)
+	name := tunnelTypes.StringDefault("", metadata)
 	if config.Name != nil {
-		name = defsecTypes.String(*config.Name, metadata)
+		name = tunnelTypes.String(*config.Name, metadata)
 	}
 
-	secConf := defsecTypes.StringDefault("", metadata)
+	secConf := tunnelTypes.StringDefault("", metadata)
 	if output.SecurityConfiguration != nil {
-		secConf = defsecTypes.String(*output.SecurityConfiguration, metadata)
+		secConf = tunnelTypes.String(*output.SecurityConfiguration, metadata)
 	}
 
 	return &emr.SecurityConfiguration{

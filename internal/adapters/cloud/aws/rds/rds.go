@@ -1,24 +1,26 @@
 package rds
 
 import (
-	"github.com/aws/aws-sdk-go-v2/aws"
+	awssdk "github.com/aws/aws-sdk-go-v2/aws"
 	rdsApi "github.com/aws/aws-sdk-go-v2/service/rds"
-	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	aws2 "github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
-	"github.com/khulnasoft/defsec/pkg/providers/aws/rds"
-	"github.com/khulnasoft/defsec/pkg/state"
-	defsecTypes "github.com/khulnasoft/defsec/pkg/types"
+	rdsTypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 
+	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/concurrency"
+	"github.com/khulnasoft/tunnel-aws/pkg/types"
+	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/rds"
+	"github.com/khulnasoft/tunnel/pkg/iac/state"
+	tunnelTypes "github.com/khulnasoft/tunnel/pkg/iac/types"
+	"github.com/khulnasoft/tunnel/pkg/log"
 )
 
 type adapter struct {
-	*aws2.RootAdapter
+	*aws.RootAdapter
 	api *rdsApi.Client
 }
 
 func init() {
-	aws2.RegisterServiceAdapter(&adapter{})
+	aws.RegisterServiceAdapter(&adapter{})
 }
 
 func (a *adapter) Name() string {
@@ -29,7 +31,7 @@ func (a *adapter) Provider() string {
 	return "aws"
 }
 
-func (a *adapter) Adapt(root *aws2.RootAdapter, state *state.State) error {
+func (a *adapter) Adapt(root *aws.RootAdapter, state *state.State) error {
 
 	a.RootAdapter = root
 	a.api = rdsApi.NewFromConfig(root.SessionConfig())
@@ -47,7 +49,7 @@ func (a *adapter) Adapt(root *aws2.RootAdapter, state *state.State) error {
 
 	state.AWS.RDS.Classic, err = a.getClassic()
 	if err != nil {
-		a.Debug("Failed to retrieve classic resource: %s", err)
+		a.Logger().Error("Failed to retrieve classic resource", log.Err(err))
 		return nil
 	}
 
@@ -66,7 +68,7 @@ func (a *adapter) Adapt(root *aws2.RootAdapter, state *state.State) error {
 
 func (a *adapter) getSnapshots() (snapshots []rds.Snapshots, err error) {
 	a.Tracker().SetServiceLabel("Discovering Snapshots...")
-	var apiDBSnapshots []types.DBSnapshot
+	var apiDBSnapshots []rdsTypes.DBSnapshot
 	var input rdsApi.DescribeDBSnapshotsInput
 
 	for {
@@ -89,7 +91,7 @@ func (a *adapter) getSnapshots() (snapshots []rds.Snapshots, err error) {
 func (a *adapter) getInstances() (instances []rds.Instance, err error) {
 
 	a.Tracker().SetServiceLabel("Discovering RDS instances...")
-	var apiDBInstances []types.DBInstance
+	var apiDBInstances []rdsTypes.DBInstance
 	var input rdsApi.DescribeDBInstancesInput
 
 	for {
@@ -111,7 +113,7 @@ func (a *adapter) getInstances() (instances []rds.Instance, err error) {
 
 func (a *adapter) getParameterGroups() (parameter []rds.ParameterGroups, err error) {
 	a.Tracker().SetServiceLabel(" Parameter...")
-	var apiParameter []types.DBParameterGroup
+	var apiParameter []rdsTypes.DBParameterGroup
 	var input rdsApi.DescribeDBParameterGroupsInput
 
 	for {
@@ -134,7 +136,7 @@ func (a *adapter) getParameterGroups() (parameter []rds.ParameterGroups, err err
 func (a *adapter) getClusters() (clusters []rds.Cluster, err error) {
 
 	a.Tracker().SetServiceLabel("Discovering RDS clusters...")
-	var apDBClusters []types.DBCluster
+	var apDBClusters []rdsTypes.DBCluster
 	var input rdsApi.DescribeDBClustersInput
 
 	for {
@@ -160,7 +162,7 @@ func (a *adapter) getClassic() (rds.Classic, error) {
 	}
 
 	a.Tracker().SetServiceLabel("Discovering RDS classic instances...")
-	var apiDBSGs []types.DBSecurityGroup
+	var apiDBSGs []rdsTypes.DBSecurityGroup
 	var input rdsApi.DescribeDBSecurityGroupsInput
 
 	for {
@@ -182,27 +184,27 @@ func (a *adapter) getClassic() (rds.Classic, error) {
 	return classic, nil
 }
 
-func (a *adapter) adaptDBInstance(dbInstance types.DBInstance) (*rds.Instance, error) {
+func (a *adapter) adaptDBInstance(dbInstance rdsTypes.DBInstance) (*rds.Instance, error) {
 
-	dbInstanceMetadata := a.CreateMetadata("db:" + *dbInstance.DBInstanceIdentifier)
+	metadata := a.CreateMetadata("db:" + awssdk.ToString(dbInstance.DBInstanceIdentifier))
 
 	var TagList []rds.TagList
 	if dbInstance.TagList != nil {
 		for range dbInstance.TagList {
 			TagList = append(TagList, rds.TagList{
-				Metadata: dbInstanceMetadata,
+				Metadata: metadata,
 			})
 		}
 	}
 
-	var EnabledCloudwatchLogsExports []defsecTypes.StringValue
+	var EnabledCloudwatchLogsExports []tunnelTypes.StringValue
 	for _, ecwe := range dbInstance.EnabledCloudwatchLogsExports {
-		EnabledCloudwatchLogsExports = append(EnabledCloudwatchLogsExports, defsecTypes.String(ecwe, dbInstanceMetadata))
+		EnabledCloudwatchLogsExports = append(EnabledCloudwatchLogsExports, tunnelTypes.String(ecwe, metadata))
 	}
 
-	var ReadReplicaDBInstanceIdentifiers []defsecTypes.StringValue
+	var ReadReplicaDBInstanceIdentifiers []tunnelTypes.StringValue
 	for _, rrdbi := range dbInstance.EnabledCloudwatchLogsExports {
-		ReadReplicaDBInstanceIdentifiers = append(ReadReplicaDBInstanceIdentifiers, defsecTypes.String(rrdbi, dbInstanceMetadata))
+		ReadReplicaDBInstanceIdentifiers = append(ReadReplicaDBInstanceIdentifiers, tunnelTypes.String(rrdbi, metadata))
 	}
 
 	engine := rds.EngineAurora
@@ -211,72 +213,72 @@ func (a *adapter) adaptDBInstance(dbInstance types.DBInstance) (*rds.Instance, e
 	}
 
 	instance := &rds.Instance{
-		Metadata:                  dbInstanceMetadata,
-		BackupRetentionPeriodDays: defsecTypes.IntFromInt32(dbInstance.BackupRetentionPeriod, dbInstanceMetadata),
-		ReplicationSourceARN:      defsecTypes.String(aws.ToString(dbInstance.ReadReplicaSourceDBInstanceIdentifier), dbInstanceMetadata),
+		Metadata:                  metadata,
+		BackupRetentionPeriodDays: types.ToInt(dbInstance.BackupRetentionPeriod, metadata),
+		ReplicationSourceARN:      types.ToString(dbInstance.ReadReplicaSourceDBInstanceIdentifier, metadata),
 		PerformanceInsights: getPerformanceInsights(
 			dbInstance.PerformanceInsightsEnabled,
 			dbInstance.PerformanceInsightsKMSKeyId,
-			dbInstanceMetadata,
+			metadata,
 		),
-		Encryption:                       getInstanceEncryption(dbInstance.StorageEncrypted, dbInstance.KmsKeyId, dbInstanceMetadata),
-		PublicAccess:                     defsecTypes.Bool(dbInstance.PubliclyAccessible, dbInstanceMetadata),
-		Engine:                           defsecTypes.String(engine, dbInstanceMetadata),
-		IAMAuthEnabled:                   defsecTypes.Bool(dbInstance.IAMDatabaseAuthenticationEnabled, dbInstanceMetadata),
-		DeletionProtection:               defsecTypes.Bool(dbInstance.DeletionProtection, dbInstanceMetadata),
-		DBInstanceArn:                    defsecTypes.String(*dbInstance.DBInstanceArn, dbInstanceMetadata),
-		StorageEncrypted:                 defsecTypes.Bool(dbInstance.StorageEncrypted, dbInstanceMetadata),
-		DBInstanceIdentifier:             defsecTypes.String(*dbInstance.DBInstanceIdentifier, dbInstanceMetadata),
+		Encryption:                       getInstanceEncryption(awssdk.ToBool(dbInstance.StorageEncrypted), dbInstance.KmsKeyId, metadata),
+		PublicAccess:                     types.ToBool(dbInstance.PubliclyAccessible, metadata),
+		Engine:                           tunnelTypes.String(engine, metadata),
+		IAMAuthEnabled:                   types.ToBool(dbInstance.IAMDatabaseAuthenticationEnabled, metadata),
+		DeletionProtection:               types.ToBool(dbInstance.DeletionProtection, metadata),
+		DBInstanceArn:                    types.ToString(dbInstance.DBInstanceArn, metadata),
+		StorageEncrypted:                 types.ToBool(dbInstance.StorageEncrypted, metadata),
+		DBInstanceIdentifier:             types.ToString(dbInstance.DBInstanceIdentifier, metadata),
 		TagList:                          TagList,
 		EnabledCloudwatchLogsExports:     EnabledCloudwatchLogsExports,
-		EngineVersion:                    defsecTypes.String(engine, dbInstanceMetadata),
-		AutoMinorVersionUpgrade:          defsecTypes.Bool(dbInstance.AutoMinorVersionUpgrade, dbInstanceMetadata),
-		MultiAZ:                          defsecTypes.Bool(dbInstance.MultiAZ, dbInstanceMetadata),
-		PubliclyAccessible:               defsecTypes.Bool(dbInstance.PubliclyAccessible, dbInstanceMetadata),
-		LatestRestorableTime:             defsecTypes.TimeUnresolvable(dbInstanceMetadata),
+		EngineVersion:                    tunnelTypes.String(engine, metadata),
+		AutoMinorVersionUpgrade:          types.ToBool(dbInstance.AutoMinorVersionUpgrade, metadata),
+		MultiAZ:                          types.ToBool(dbInstance.MultiAZ, metadata),
+		PubliclyAccessible:               types.ToBool(dbInstance.PubliclyAccessible, metadata),
+		LatestRestorableTime:             tunnelTypes.TimeUnresolvable(metadata),
 		ReadReplicaDBInstanceIdentifiers: ReadReplicaDBInstanceIdentifiers,
 	}
 
 	return instance, nil
 }
 
-func (a *adapter) adaptCluster(dbCluster types.DBCluster) (*rds.Cluster, error) {
+func (a *adapter) adaptCluster(dbCluster rdsTypes.DBCluster) (*rds.Cluster, error) {
 
-	dbClusterMetadata := a.CreateMetadata("cluster:" + *dbCluster.DBClusterIdentifier)
+	dbClusterMetadata := a.CreateMetadata("cluster:" + awssdk.ToString(dbCluster.DBClusterIdentifier))
 
 	engine := rds.EngineAurora
 	if dbCluster.Engine != nil {
 		engine = *dbCluster.Engine
 	}
 
-	var availabilityZones []defsecTypes.StringValue
+	var availabilityZones []tunnelTypes.StringValue
 	for _, az := range dbCluster.AvailabilityZones {
-		availabilityZones = append(availabilityZones, defsecTypes.String(az, dbClusterMetadata))
+		availabilityZones = append(availabilityZones, tunnelTypes.String(az, dbClusterMetadata))
 	}
 
 	cluster := &rds.Cluster{
 		Metadata:                  dbClusterMetadata,
-		BackupRetentionPeriodDays: defsecTypes.IntFromInt32(aws.ToInt32(dbCluster.BackupRetentionPeriod), dbClusterMetadata),
-		ReplicationSourceARN:      defsecTypes.String(aws.ToString(dbCluster.ReplicationSourceIdentifier), dbClusterMetadata),
+		BackupRetentionPeriodDays: types.ToInt(dbCluster.BackupRetentionPeriod, dbClusterMetadata),
+		ReplicationSourceARN:      types.ToString(dbCluster.ReplicationSourceIdentifier, dbClusterMetadata),
 		PerformanceInsights: getPerformanceInsights(
 			dbCluster.PerformanceInsightsEnabled,
 			dbCluster.PerformanceInsightsKMSKeyId,
 			dbClusterMetadata,
 		),
-		Encryption:           getInstanceEncryption(dbCluster.StorageEncrypted, dbCluster.KmsKeyId, dbClusterMetadata),
-		PublicAccess:         defsecTypes.Bool(aws.ToBool(dbCluster.PubliclyAccessible), dbClusterMetadata),
-		Engine:               defsecTypes.String(engine, dbClusterMetadata),
-		LatestRestorableTime: defsecTypes.TimeUnresolvable(dbClusterMetadata),
+		Encryption:           getInstanceEncryption(awssdk.ToBool(dbCluster.StorageEncrypted), dbCluster.KmsKeyId, dbClusterMetadata),
+		PublicAccess:         types.ToBool(dbCluster.PubliclyAccessible, dbClusterMetadata),
+		Engine:               tunnelTypes.String(engine, dbClusterMetadata),
+		LatestRestorableTime: tunnelTypes.TimeUnresolvable(dbClusterMetadata),
 		AvailabilityZones:    availabilityZones,
-		DeletionProtection:   defsecTypes.Bool(aws.ToBool(dbCluster.DeletionProtection), dbClusterMetadata),
+		DeletionProtection:   types.ToBool(dbCluster.DeletionProtection, dbClusterMetadata),
 	}
 
 	return cluster, nil
 }
 
-func (a *adapter) adaptParameterGroup(dbParameterGroup types.DBParameterGroup) (*rds.ParameterGroups, error) {
+func (a *adapter) adaptParameterGroup(dbParameterGroup rdsTypes.DBParameterGroup) (*rds.ParameterGroups, error) {
 
-	metadata := a.CreateMetadata("dbparametergroup:" + *dbParameterGroup.DBParameterGroupArn)
+	metadata := a.CreateMetadata("dbparametergroup:" + awssdk.ToString(dbParameterGroup.DBParameterGroupArn))
 	var parameter []rds.Parameters
 	output, err := a.api.DescribeDBParameters(a.Context(), &rdsApi.DescribeDBParametersInput{
 		DBParameterGroupName: dbParameterGroup.DBParameterGroupName,
@@ -287,33 +289,24 @@ func (a *adapter) adaptParameterGroup(dbParameterGroup types.DBParameterGroup) (
 
 	for _, r := range output.Parameters {
 
-		parameterName := defsecTypes.StringDefault("", metadata)
-		if r.ParameterName != nil {
-			parameterName = defsecTypes.String(*r.ParameterName, metadata)
-		}
-
-		parmeterValue := defsecTypes.StringDefault("", metadata)
-		if r.ParameterValue != nil {
-			parmeterValue = defsecTypes.String(*r.ParameterValue, metadata)
-		}
 		parameter = append(parameter, rds.Parameters{
 			Metadata:       metadata,
-			ParameterName:  parameterName,
-			ParameterValue: parmeterValue,
+			ParameterName:  types.ToString(r.ParameterName, metadata),
+			ParameterValue: types.ToString(r.ParameterValue, metadata),
 		})
 	}
 
 	return &rds.ParameterGroups{
 		Metadata:               metadata,
 		Parameters:             parameter,
-		DBParameterGroupName:   defsecTypes.String(*dbParameterGroup.DBParameterGroupName, metadata),
-		DBParameterGroupFamily: defsecTypes.String(*dbParameterGroup.DBParameterGroupFamily, metadata),
+		DBParameterGroupName:   tunnelTypes.String(awssdk.ToString(dbParameterGroup.DBParameterGroupName), metadata),
+		DBParameterGroupFamily: tunnelTypes.String(awssdk.ToString(dbParameterGroup.DBParameterGroupFamily), metadata),
 	}, nil
 
 }
 
-func (a *adapter) adaptDBSnapshots(dbSnapshots types.DBSnapshot) (*rds.Snapshots, error) {
-	metadata := a.CreateMetadata("dbsnapshots" + *dbSnapshots.DBSnapshotArn)
+func (a *adapter) adaptDBSnapshots(dbSnapshots rdsTypes.DBSnapshot) (*rds.Snapshots, error) {
+	metadata := a.CreateMetadata("dbsnapshots" + awssdk.ToString(dbSnapshots.DBSnapshotArn))
 
 	var SnapshotAttributes []rds.DBSnapshotAttributes
 	output, err := a.api.DescribeDBSnapshotAttributes(a.Context(), &rdsApi.DescribeDBSnapshotAttributesInput{
@@ -325,10 +318,10 @@ func (a *adapter) adaptDBSnapshots(dbSnapshots types.DBSnapshot) (*rds.Snapshots
 	if output.DBSnapshotAttributesResult != nil {
 		for _, r := range output.DBSnapshotAttributesResult.DBSnapshotAttributes {
 
-			var AV []defsecTypes.StringValue
+			var AV []tunnelTypes.StringValue
 			if r.AttributeValues != nil {
 				for _, Values := range r.AttributeValues {
-					AV = append(AV, defsecTypes.String(Values, metadata))
+					AV = append(AV, tunnelTypes.String(Values, metadata))
 				}
 			}
 			SnapshotAttributes = append(SnapshotAttributes, rds.DBSnapshotAttributes{
@@ -341,24 +334,24 @@ func (a *adapter) adaptDBSnapshots(dbSnapshots types.DBSnapshot) (*rds.Snapshots
 
 	snapshots := &rds.Snapshots{
 		Metadata:             metadata,
-		DBSnapshotIdentifier: defsecTypes.String(*dbSnapshots.DBSnapshotIdentifier, metadata),
-		DBSnapshotArn:        defsecTypes.String(*dbSnapshots.DBSnapshotArn, metadata),
-		Encrypted:            defsecTypes.Bool(dbSnapshots.Encrypted, metadata),
-		KmsKeyId:             defsecTypes.String("", metadata),
+		DBSnapshotIdentifier: types.ToString(dbSnapshots.DBSnapshotIdentifier, metadata),
+		DBSnapshotArn:        types.ToString(dbSnapshots.DBSnapshotArn, metadata),
+		Encrypted:            types.ToBool(dbSnapshots.Encrypted, metadata),
+		KmsKeyId:             tunnelTypes.String("", metadata),
 		SnapshotAttributes:   SnapshotAttributes,
 	}
 
 	// KMSKeyID is only set if Encryption is enabled
 	if snapshots.Encrypted.IsTrue() {
-		snapshots.KmsKeyId = defsecTypes.StringDefault(*dbSnapshots.KmsKeyId, metadata)
+		snapshots.KmsKeyId = tunnelTypes.StringDefault(awssdk.ToString(dbSnapshots.KmsKeyId), metadata)
 	}
 
 	return snapshots, nil
 }
 
-func (a *adapter) adaptClassic(dbSecurityGroup types.DBSecurityGroup) (*rds.DBSecurityGroup, error) {
+func (a *adapter) adaptClassic(dbSecurityGroup rdsTypes.DBSecurityGroup) (*rds.DBSecurityGroup, error) {
 
-	dbSecurityGroupMetadata := a.CreateMetadata("secgrp:" + *dbSecurityGroup.DBSecurityGroupName)
+	dbSecurityGroupMetadata := a.CreateMetadata("secgrp:" + awssdk.ToString(dbSecurityGroup.DBSecurityGroupName))
 
 	dbsg := &rds.DBSecurityGroup{
 		Metadata: dbSecurityGroupMetadata,
@@ -367,31 +360,21 @@ func (a *adapter) adaptClassic(dbSecurityGroup types.DBSecurityGroup) (*rds.DBSe
 	return dbsg, nil
 }
 
-func getInstanceEncryption(storageEncrypted bool, kmsKeyID *string, metadata defsecTypes.Metadata) rds.Encryption {
+func getInstanceEncryption(storageEncrypted bool, kmsKeyID *string, metadata tunnelTypes.Metadata) rds.Encryption {
 	encryption := rds.Encryption{
 		Metadata:       metadata,
-		EncryptStorage: defsecTypes.BoolDefault(storageEncrypted, metadata),
-		KMSKeyID:       defsecTypes.StringDefault("", metadata),
-	}
-
-	if kmsKeyID != nil {
-		encryption.KMSKeyID = defsecTypes.String(*kmsKeyID, metadata)
+		EncryptStorage: tunnelTypes.BoolDefault(storageEncrypted, metadata),
+		KMSKeyID:       types.ToString(kmsKeyID, metadata),
 	}
 
 	return encryption
 }
 
-func getPerformanceInsights(enabled *bool, kmsKeyID *string, metadata defsecTypes.Metadata) rds.PerformanceInsights {
+func getPerformanceInsights(enabled *bool, kmsKeyID *string, metadata tunnelTypes.Metadata) rds.PerformanceInsights {
 	performanceInsights := rds.PerformanceInsights{
 		Metadata: metadata,
-		Enabled:  defsecTypes.BoolDefault(false, metadata),
-		KMSKeyID: defsecTypes.StringDefault("", metadata),
-	}
-	if enabled != nil {
-		performanceInsights.Enabled = defsecTypes.Bool(*enabled, metadata)
-	}
-	if kmsKeyID != nil {
-		performanceInsights.KMSKeyID = defsecTypes.String(*kmsKeyID, metadata)
+		Enabled:  types.ToBool(enabled, metadata),
+		KMSKeyID: types.ToString(kmsKeyID, metadata),
 	}
 
 	return performanceInsights
