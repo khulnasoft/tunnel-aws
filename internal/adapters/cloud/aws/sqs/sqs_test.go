@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	localstack "github.com/aquasecurity/go-mock-aws"
+	localstack "github.com/khulnasoft/go-mock-aws"
 	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws/test"
 	"github.com/khulnasoft/tunnel/pkg/iac/providers/aws/sqs"

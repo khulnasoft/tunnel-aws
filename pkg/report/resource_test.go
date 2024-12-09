@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/khulnasoft/tunnel-db/pkg/types"
+	"go.khulnasoft.com/tunnel-db/pkg/types"
 	"github.com/khulnasoft/tunnel/pkg/flag"
 )
 

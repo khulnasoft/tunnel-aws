@@ -5,7 +5,7 @@ import (
 	"io"
 
 	"github.com/aquasecurity/tml"
-	dbTypes "github.com/khulnasoft/tunnel-db/pkg/types"
+	dbTypes "go.khulnasoft.com/tunnel-db/pkg/types"
 	renderer "github.com/khulnasoft/tunnel/pkg/report/table"
 	"github.com/khulnasoft/tunnel/pkg/types"
 )

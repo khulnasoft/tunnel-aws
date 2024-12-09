@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/stretchr/testify/require"
 
-	localstack "github.com/aquasecurity/go-mock-aws"
+	localstack "github.com/khulnasoft/go-mock-aws"
 	"github.com/khulnasoft/tunnel-aws/internal/adapters/cloud/aws"
 	"github.com/khulnasoft/tunnel-aws/pkg/progress"
 	"github.com/khulnasoft/tunnel/pkg/log"
