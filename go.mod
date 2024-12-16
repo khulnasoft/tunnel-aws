@@ -16,17 +16,17 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/athena v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.43.1
-	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.46.2
+	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.49.2
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.49.3
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.195.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.197.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.7
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.2
 	github.com/aws/aws-sdk-go-v2/service/efs v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.53.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/elasticsearchservice v1.32.7
@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.50.2
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.50.3
 	github.com/khulnasoft/go-mock-aws v0.0.0-20241209045015-53298457d4c6
 	github.com/khulnasoft/tunnel v0.0.3
 	github.com/liamg/iamgo v0.0.9
